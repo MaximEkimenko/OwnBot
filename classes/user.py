@@ -1,14 +1,34 @@
+import asyncio
 from typing import Dict
 from indicator import Indicator
 from report import Report
 from logger_config import log
+from config import settings
+from db.database import connection
+from db.db_utils import user_db_utils
+
+
+
+
 
 
 class User:
-    def __init__(self, telegram_id: int, telegram_token: str, todoist_token: str):
+    def __init__(self, telegram_id: int,
+                 todoist_token: str | None = None,
+                 user_id: int | None = None):
         self.telegram_id = telegram_id
-        self.telegram_token = telegram_token
         self.todoist_token = todoist_token
+        self.user_id = user_id
+
+
+    @classmethod
+    async def register(cls, telegram_id: int) -> int | None:
+        """Регистрация пользователя"""
+        return await user_db_utils.create_user(telegram_id)
+
+    async def add_todoist_token(self):
+        """Добавление токена todoist - включение функционал учёта todoist"""
+        return await user_db_utils.add_user_todoist_token(user_id=self.user_id, todoist_token=self.todoist_token)
 
     @classmethod
     async def auth(cls, telegram_id: int):  # реализация фабричного метода
@@ -27,34 +47,29 @@ class User:
 
 
 
+
+    async def save_todoist_data(self):
+        """Сохранение todoist данных по API todoist"""
+
+
+
     def get_user_data(self) -> Dict:
-        # Логика получения данных пользователя
-        return {
-            "telegram_id": self.telegram_id,
-            "telegram_token": self.telegram_token,
-            "todoist_token": self.todoist_token
-        }
+        """ Логика получения данных пользователя """
 
-    def get_indicator(self, name: str) -> Indicator:
-        # Логика получения индикатора по имени
-        pass
 
-    def get_report(self, name: str) -> Report:
-        # Логика получения отчета по имени
-        pass
 
     def indicators_config(self):
-        # Логика настройки индикаторов
+        """Логика настройки индикаторов"""
         pass
 
     def reports_config(self):
-        # Логика настройки отчетов
-        pass
+        """Логика настройки отчетов"""
 
     def plan_tasks(self):
-        # Логика планирования задач
+        """Логика планирования задач"""
         pass
 
 
 if __name__ == '__main__':
-    log.debug('Starting')
+    asyncio.run()
+

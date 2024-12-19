@@ -18,6 +18,7 @@ class Settings(BaseSettings):
 
 settings = Settings()
 BaseDIR = settings.BASE_DIR
+TIME_ZONE = 6
 
 if __name__ == "__main__":
     print(settings.BASE_DIR)

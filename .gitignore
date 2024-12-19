@@ -9,3 +9,4 @@ wheels/
 # Virtual environments
 .venv
 .env
+tst_in_ownbot.py

@@ -5,7 +5,8 @@ from config import BaseDIR
 console_format = "<green>{time:HH:mm:ss}</green> | " \
                  "<level>{level: <8}</level> | " \
                  "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - " \
-                 "<level>{message}</level>"
+                 "<level>{message}</level>" \
+                 "<level>{exception}</level>"
 
 LOG_DIR = BaseDIR / "logs"
 if not os.path.exists(LOG_DIR):

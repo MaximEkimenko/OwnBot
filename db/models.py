@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, BIGINT, TIMESTAMP
+from sqlalchemy import ForeignKey, BIGINT, TIMESTAMP, DATETIME
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.sqlite import JSON
@@ -11,8 +11,7 @@ from enums import TaskType, ReportType
 class UserModel(Base):
     """Модель пользователя"""
     telegram_id: Mapped[int] = mapped_column(BIGINT, unique=True)
-    telegram_token: Mapped[str]
-    todoist_token: Mapped[str]
+    todoist_token: Mapped[str] = mapped_column(nullable=True)
 
     indicators: Mapped[list["Indicator"]] = relationship("Indicator", back_populates="user")
     tasks: Mapped[list["ScheduleTask"]] = relationship("ScheduleTask", back_populates="user")
@@ -22,10 +21,11 @@ class UserModel(Base):
 
 class Indicator(Base):
     """Модель показателей"""
+    date: Mapped[datetime] = mapped_column(DATETIME)
     user_id: Mapped[int] = mapped_column(ForeignKey('usermodel.id'))
     indicator_name: Mapped[str] = mapped_column(unique=True)
     params: Mapped[dict | None] = mapped_column(JSON)
-    user: Mapped[UserModel] = relationship("UserModel ", back_populates="indicators")
+    user: Mapped[UserModel] = relationship("UserModel", back_populates="indicators")
     indicator_params: Mapped[list["IndicatorParams"]] = relationship("IndicatorParams",
                                                                      back_populates="indicator",
                                                                      lazy='joined'
@@ -54,7 +54,7 @@ class ScheduleTask(Base):
     schedule: Mapped[str]
     action: Mapped[str]
 
-    user: Mapped[UserModel] = relationship("UserModel ", back_populates="tasks", lazy='joined')
+    user: Mapped[UserModel] = relationship("UserModel", back_populates="tasks", lazy='joined')
 
 
 class Report(Base):
@@ -69,12 +69,15 @@ class Report(Base):
 
 
 class TodoistTask(Base):
+    # def __init__(self, **kw):
+    #     super().__init__()
 
     user_id: Mapped[int] = mapped_column(ForeignKey('usermodel.id'))
-    todoist_task: Mapped[str] = mapped_column(unique=True)
+    task: Mapped[str] = mapped_column()
     project: Mapped[str] = mapped_column(nullable=True)
-    label: Mapped[str] = mapped_column(nullable=True)
+    labels: Mapped[str] = mapped_column(nullable=True)
+    priority: Mapped[int] = mapped_column(nullable=True)
     description: Mapped[str] = mapped_column(nullable=True)
-    done_time: Mapped[str]
+    completed_at: Mapped[datetime] = mapped_column(TIMESTAMP)
 
     user: Mapped[UserModel] = relationship("UserModel", back_populates="todoist_tasks", lazy='joined')
