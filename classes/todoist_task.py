@@ -2,12 +2,14 @@ from datetime import datetime
 
 
 class TodoistTask:
-    def __init__(self, todoist_task: str, project: str, label: str, description: str, done_time: datetime):
-        self.todoist_task = todoist_task
+    def __init__(self, task: str, project: str, labels: str | None, description: str | None,
+                 completed_at: datetime, priority: str):
+        self.task = task
         self.project = project
-        self.label = label
+        self.labels = labels
         self.description = description
-        self.done_time = done_time
+        self.completed_at = completed_at
+        self.priority = priority
 
     def get_data(self, day: datetime):
         # Логика получения данных за день

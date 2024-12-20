@@ -5,18 +5,20 @@ from enums import ReportType
 
 class Report:
     """Отчёт"""
-    def __init__(self, name: str, report_type: ReportType, start: datetime, end: datetime):
+    def __init__(self, name: str,
+                 start: datetime,
+                 end: datetime,
+                 report_type: ReportType = ReportType.FULL):
         self.name = name
-        self.type = report_type
+        self.report_type = report_type
         self.start = start
         self.end = end
-        self.indicators = []
 
-    def create(self, start: datetime, end: datetime, indicators: list[Indicator]):
+    def create(self, start: datetime, end: datetime):
         # Логика создания отчета
         self.start = start
         self.end = end
-        self.indicators = indicators
+
 
     def send(self, address: str):
         # Логика отправки отчета

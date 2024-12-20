@@ -8,6 +8,8 @@ from pprint import pprint
 from config import TIME_ZONE
 from todoist_api_python.api_async import TodoistAPIAsync
 from logger_config import log
+
+
 # TODO обойти ограничение в 30 выполненных задач за последние сутки:
 #  делать выгрузку на фоне по сигналу при выполнении (отправке команды?).
 #  Или по расписанию несколько раз в день (каждый час?).
@@ -34,26 +36,26 @@ async def get_todoist_data(token: str) -> list[dict[str: Any | None]]:
         # Проекты из response_json
         projects = {value['id']: value['name'] for _, value in response_json['projects'].items()}
         # Задачи с датой выполнения из response_json
-        tasks = [(task['task_id'], task['completed_at']) for task in response_json['items']]
+        tasks = [{'task_id': task['task_id'], 'item_id': task['id'], 'completed_at': task['completed_at']}
+                 for task in response_json['items']]
         competed_tasks = []
-
         # детали задач
-        for task_id in tasks:
-            api_task = await api.get_task(task_id=task_id[0])
+        for task_data in tasks:
+            api_task = await api.get_task(task_id=task_data['task_id'])
             task = {
-                    'task': api_task.content,
-                    'project': projects[api_task.project_id],
-                    # 'project_id': api_task.project_id,
-                    'labels': ','.join(api_task.labels),
-                    'description': api_task.description,
-                    'completed_at': parse(task_id[1], ignoretz=True) + timedelta(hours=TIME_ZONE),
-                    # 'created_at': parse(api_task.created_at, ignoretz=True) + timedelta(hours=TIME_ZONE),
-                    # 'task_id': api_task.id,
-                    'priority': api_task.priority,
-                    # 'due': api_task.due
-                    }
+                'task': api_task.content,
+                'project': projects[api_task.project_id],
+                'task_item_id': int(task_data['item_id']),
+                'task_id': int(api_task.id),
+                'project_id': int(api_task.project_id),
+                'labels': ','.join(api_task.labels),
+                'description': api_task.description,
+                'completed_at': parse(task_data['completed_at'], ignoretz=True) + timedelta(hours=TIME_ZONE),
+                'added_at': parse(api_task.created_at, ignoretz=True) + timedelta(hours=TIME_ZONE),
+
+                'priority': api_task.priority,
+            }
             competed_tasks.append(task.copy())
-        # pprint(competed_tasks)
         return competed_tasks
 
     except Exception as e:
@@ -61,11 +63,5 @@ async def get_todoist_data(token: str) -> list[dict[str: Any | None]]:
         log.exception(e)
 
 
-async def save_todoist_data(data_save: dict) -> None:
-    """Сохранение данных"""
-
-    pass
-
-
 if __name__ == '__main__':
-    print(asyncio.run(get_todoist_data(token='48cbdb22977eb9d84368aef673d3c7ba7c0f311a')))
+    pprint(asyncio.run(get_todoist_data(token='48cbdb22977eb9d84368aef673d3c7ba7c0f311a')))

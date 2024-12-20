@@ -27,8 +27,7 @@ class Indicator(Base):
     params: Mapped[dict | None] = mapped_column(JSON)
     user: Mapped[UserModel] = relationship("UserModel", back_populates="indicators")
     indicator_params: Mapped[list["IndicatorParams"]] = relationship("IndicatorParams",
-                                                                     back_populates="indicator",
-                                                                     lazy='joined'
+                                                                     back_populates="indicator"
                                                                      )
 
 
@@ -43,7 +42,7 @@ class IndicatorParams(Base):
     track_by_project: Mapped[bool] = mapped_column(default=False)
 
     indicator_id: Mapped[int] = mapped_column(ForeignKey('indicator.id'))
-    indicator: Mapped[Indicator] = relationship("Indicator", back_populates="indicator_params", lazy='joined')
+    indicator: Mapped[Indicator] = relationship("Indicator", back_populates="indicator_params")
 
 
 class ScheduleTask(Base):
@@ -54,7 +53,7 @@ class ScheduleTask(Base):
     schedule: Mapped[str]
     action: Mapped[str]
 
-    user: Mapped[UserModel] = relationship("UserModel", back_populates="tasks", lazy='joined')
+    user: Mapped[UserModel] = relationship("UserModel", back_populates="tasks")
 
 
 class Report(Base):
@@ -65,14 +64,18 @@ class Report(Base):
     start: Mapped[datetime] = mapped_column(TIMESTAMP)
     end: Mapped[datetime] = mapped_column(TIMESTAMP)
 
-    user: Mapped[UserModel] = relationship("UserModel", back_populates="reports", lazy='joined')
+    user: Mapped[UserModel] = relationship("UserModel", back_populates="reports")
 
+    def __repr__(self):
+        return self.__tablename__
 
 class TodoistTask(Base):
-    # def __init__(self, **kw):
-    #     super().__init__()
-
+    """Модель задач Todoist"""
     user_id: Mapped[int] = mapped_column(ForeignKey('usermodel.id'))
+    task_item_id: Mapped[int]  # уникальный ключ item записи todoist api
+    project_id: Mapped[int]  # id проекта
+    task_id: Mapped[int]  # id задачи НЕ УНИКАЛЬНО для повторяющихся задач
+    added_at: Mapped[datetime] = mapped_column(TIMESTAMP)  # дата добавления задачи в todoist
     task: Mapped[str] = mapped_column()
     project: Mapped[str] = mapped_column(nullable=True)
     labels: Mapped[str] = mapped_column(nullable=True)
@@ -80,4 +83,7 @@ class TodoistTask(Base):
     description: Mapped[str] = mapped_column(nullable=True)
     completed_at: Mapped[datetime] = mapped_column(TIMESTAMP)
 
-    user: Mapped[UserModel] = relationship("UserModel", back_populates="todoist_tasks", lazy='joined')
+    user: Mapped[UserModel] = relationship("UserModel", back_populates="todoist_tasks")
+
+    def __repr__(self):
+        return self.__tablename__

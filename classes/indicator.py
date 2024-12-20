@@ -10,10 +10,30 @@ class Indicator:
         self.params = params
         self.todoist_data: List[TodoistTask] = []
 
-    def update_indicator(self):
-        # Логика обновления индикатора
-        pass
+    # TODO источник предыдущей версии расчёта проект owneed_bot -
+    #  - файл progress_tracker_db_write.py
+    #  - функция indicators_write
 
-    def calculate_indicators(self, params, todoist_data):
-        # Логика расчета индикаторов
-        pass
+    # TODO
+    #  Виды показателей:
+    #      - Складываемые по description одного проекта todoist_task с разделением по литералу
+    #       (признаку проекта), например:
+    #       словарь соответствия показателей литералам:
+    #       projects_keys = {'Study': {'B': 'book', 'A': 'audiobook', 'V': 'video'},
+    #                      'Wealth': {'M': 'add_income', 'P': 'poms'}}
+    #       Для todoist_task читаем проект, description, литерал; сопоставляем и складываем.
+    #       for project in projects_keys:
+    #           study_data.update(task_description_read(projects_keys=projects_keys, project=project, today=today));
+    #      - Количество выполненных задач внутри определённого проекта в течении суток;
+    #      - Операции со значениями из ячеек файлов excel, json файлов и т.д.
+
+    # TODO
+    #  1 Формирование фйалов параметров индикаторов, с доступом для конечного пользователя;
+    #  2 Чтение файлов настроек, инициализация класса параметров;
+    #  3 Расчёт показателей, агрегация данных;
+    #  4 Запись в БД;
+
+
+    async def read_settings(self):
+        """Чтение настроек"""
+

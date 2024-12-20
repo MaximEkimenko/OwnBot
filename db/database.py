@@ -4,12 +4,9 @@ from sqlalchemy import func, TIMESTAMP, Integer
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, declared_attr, class_mapper
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine, AsyncSession
 
-
 from config import settings
+from logger_config import log
 
-import logging
-
-logger = logging.getLogger(__name__)
 
 database_url = settings.db_url
 engine = create_async_engine(url=database_url)
@@ -49,7 +46,7 @@ def connection(method):
                 return await method(*args, session=session, **kwargs)
             except Exception as e:
                 await session.rollback()
-                logger.error("Ошибка подключения к БД.")
+                log.error("Ошибка подключения к БД.")
                 raise e
             finally:
                 await session.close()
