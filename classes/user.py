@@ -8,6 +8,7 @@ from logger_config import log
 from config import settings
 from db.database import connection
 from db.db_utils import user_db_utils, todoist_task_db_utils
+from indicator_param import IndicatorParam
 
 
 class User:
@@ -17,7 +18,8 @@ class User:
                  reports: tuple[Report | None] = None,
                  schedules: tuple[ScheduleTask | None] = None,
                  todoist_tasks: tuple[TodoistTask | None] = None,
-                 indicators: tuple[Indicator | None] = None
+                 # indicators: Indicator = None,
+                 # indicator_params: IndicatorParam = None
                  ):
         self.telegram_id = telegram_id
         self.todoist_token = todoist_token
@@ -25,12 +27,13 @@ class User:
         self.todoist_tasks = todoist_tasks
         self.reports = reports
         self.schedules = schedules
-        self.indicators = indicators
+        self.indicators = Indicator(user_id=self.user_id)
+        self.indicator_params = IndicatorParam(user_id=self.user_id)
 
     @classmethod
     async def register(cls, telegram_id: int) -> int | None:
         """Регистрация пользователя"""
-        return await user_db_utils.create_user(telegram_id)
+        return await user_db_utils.create_user(telegram_id=telegram_id)
 
     async def add_todoist_token(self, todoist_token: str) -> bool:
         """Добавление токена todoist - включение функционал учёта todoist"""
@@ -51,7 +54,6 @@ class User:
         todoist_tasks = None
         reports = None
         schedules = None
-        indicators = None
         if task_data := user_data[telegram_id].get('todoisttask'):
             todoist_tasks = tuple([TodoistTask(task=data['task'],
                                                project=data['project'],
@@ -82,8 +84,6 @@ class User:
         #  инициализировать экземпляр Indicators
         #  отдать в класс USER
 
-        indicators = None
-
         return User(
             telegram_id=user_data[telegram_id]['telegram_id'],
             user_id=user_data[telegram_id]['id'],
@@ -91,7 +91,7 @@ class User:
             todoist_tasks=todoist_tasks,
             schedules=schedules,
             reports=reports,
-            indicators=indicators
+
         )
 
     def get_user_data(self) -> Dict:
@@ -110,6 +110,18 @@ class User:
 
 
 if __name__ == '__main__':
+    # регистрация пользователя
+    # asyncio.run(User.register(telegram_id=settings.SUPER_USER_TG_ID))
+    # аутентификация пользователя
     _user = asyncio.run(User.auth(settings.SUPER_USER_TG_ID))
+    # добавление todoist_token, обновление todoist_task
+    # asyncio.run(_user.add_todoist_token(todoist_token=settings.TODOIST_TOKEN))
+    # добавление новых todoist_task
+    asyncio.run(_user.save_todoist_data())
+    # добавление параметров из json
+    # asyncio.run(_user.indicator_params.add_params_json())
+    # расчёт показателей
+    # asyncio.run(_user.indicators.calculate_indicators())
 
-    print(_user.indicators)
+    # print(_user.indicators)
+

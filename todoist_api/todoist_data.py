@@ -41,7 +41,10 @@ async def get_todoist_data(token: str) -> list[dict[str: Any | None]]:
         competed_tasks = []
         # детали задач
         for task_data in tasks:
+            # TODO проблема с is_recurring task они обновляются постоянно, даже когда не выполнены. т.к.
+            #  task_id не меняется.
             api_task = await api.get_task(task_id=task_data['task_id'])
+            # pprint(api_task)
             task = {
                 'task': api_task.content,
                 'project': projects[api_task.project_id],

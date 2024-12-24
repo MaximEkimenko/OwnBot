@@ -1,0 +1,164 @@
+[
+    {
+        "indicator_name": "book",
+        "project_name": "Study",
+        "description_literal": "B",
+
+        "calc_as_average": true,
+        "project_track_based_method": true,
+        "description_based_method": true,
+        "quantity_based_method": false,
+        "file_based_method": false,
+        "label_track_based_method": false,
+        "task_name_track_based_method": false
+    },
+    {
+        "indicator_name": "audiobook",
+        "project_name": "Study",
+        "description_literal": "A",
+
+        "calc_as_average": true,
+        "project_track_based_method": true,
+        "description_based_method": true,
+        "quantity_based_method": false,
+        "file_based_method": false,
+        "label_track_based_method": false,
+        "task_name_track_based_method": false
+    },
+    {
+        "indicator_name": "video",
+        "project_name": "Study",
+        "description_literal": "V",
+
+        "calc_as_average": true,
+        "project_track_based_method": true,
+        "description_based_method": true,
+        "quantity_based_method": false,
+        "file_based_method": false,
+        "label_track_based_method": false,
+        "task_name_track_based_method": false
+    },
+    {
+        "indicator_name": "steps",
+        "project_name": "Health",
+
+        "calc_as_average": true,
+        "project_track_based_method": false,
+        "description_based_method": false,
+        "quantity_based_method": false,
+        "file_based_method": true,
+        "label_track_based_method": false,
+        "task_name_track_based_method": false
+    },
+    {
+        "indicator_name": "kcals",
+        "project_name": "Health",
+ 
+        "calc_as_average": true,
+        "project_track_based_method": false,
+        "description_based_method": false,
+        "quantity_based_method": false,
+        "file_based_method": true,
+        "label_track_based_method": false,
+        "task_name_track_based_method": false
+    },
+    {
+        "indicator_name": "add_income",
+        "project_name": "Wealth",
+
+        "calc_as_average": true,
+        "project_track_based_method": false,
+        "description_based_method": false,
+        "quantity_based_method": false,
+        "file_based_method": true,
+        "label_track_based_method": false,
+        "task_name_track_based_method": false
+    },
+    {
+        "indicator_name": "cndx",
+        "project_name": "Wealth",
+ 
+
+        "calc_as_average": false,
+        "project_track_based_method": false,
+        "description_based_method": false,
+        "quantity_based_method": false,
+        "file_based_method": true,
+        "label_track_based_method": false,
+        "task_name_track_based_method": false
+    },
+    {
+        "indicator_name": "poms",
+        "project_name": "Wealth",
+        "description_literal": "P",
+
+        "calc_as_average": true,
+        "project_track_based_method": true,
+        "description_based_method": true,
+        "quantity_based_method": false,
+        "file_based_method": false,
+        "label_track_based_method": false,
+        "task_name_track_based_method": false
+    },
+    {
+        "indicator_name": "study_done",
+        "project_name": "Study",
+
+        "calc_as_average": true,
+        "project_track_based_method": false,
+        "description_based_method": false,
+        "quantity_based_method": true,
+        "file_based_method": false,
+        "label_track_based_method": false,
+        "task_name_track_based_method": false
+    },
+    {
+        "indicator_name": "health_done",
+        "project_name": "Health",
+
+
+        "calc_as_average": true,
+        "project_track_based_method": false,
+        "description_based_method": false,
+        "quantity_based_method": true,
+        "file_based_method": false,
+        "label_track_based_method": false,
+        "task_name_track_based_method": false
+    },
+    {
+        "indicator_name": "wealth_done",
+        "project_name": "Wealth",
+
+        "calc_as_average": true,
+        "project_track_based_method": false,
+        "description_based_method": false,
+        "quantity_based_method": true,
+        "file_based_method": false,
+        "label_track_based_method": false,
+        "task_name_track_based_method": false
+    },
+    {
+        "indicator_name": "social_done",
+        "project_name": "Social",
+
+        "calc_as_average": true,
+        "project_track_based_method": false,
+        "description_based_method": false,
+        "quantity_based_method": true,
+        "file_based_method": false,
+        "label_track_based_method": false,
+        "task_name_track_based_method": false
+    },
+    {
+        "indicator_name": "studio_done",
+        "project_name": "Studio",
+
+        "calc_as_average": true,
+        "project_track_based_method": false,
+        "description_based_method": false,
+        "quantity_based_method": true, 
+        "file_based_method": false,
+        "label_track_based_method": false,
+        "task_name_track_based_method": false
+    }
+]

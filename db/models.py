@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, BIGINT, TIMESTAMP, DATETIME
+from sqlalchemy import ForeignKey, BIGINT, TIMESTAMP, DATETIME, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.sqlite import JSON
@@ -17,6 +17,8 @@ class UserModel(Base):
     tasks: Mapped[list["ScheduleTask"]] = relationship("ScheduleTask", back_populates="user")
     reports: Mapped[list["Report"]] = relationship("Report", back_populates="user")
     todoist_tasks: Mapped[list["TodoistTask"]] = relationship("TodoistTask", back_populates="user")
+    indicator_params: Mapped[list["IndicatorParams"]] = relationship("IndicatorParams",
+                                                                     back_populates="user")
 
 
 class Indicator(Base):
@@ -26,23 +28,53 @@ class Indicator(Base):
     indicator_name: Mapped[str] = mapped_column(unique=True)
     params: Mapped[dict | None] = mapped_column(JSON)
     user: Mapped[UserModel] = relationship("UserModel", back_populates="indicators")
-    indicator_params: Mapped[list["IndicatorParams"]] = relationship("IndicatorParams",
-                                                                     back_populates="indicator"
-                                                                     )
+
+    indicator_params_id: Mapped[int] = mapped_column(ForeignKey('indicatorparams.id'))
+    indicator_params: Mapped['IndicatorParams'] = relationship("IndicatorParams", back_populates="indicator")
+
+    # для каждого пользователя indicator_name уникален
+    __table_args__ = (
+        UniqueConstraint('user_id', 'indicator_name', name='uq_user_indicator'),
+    )
 
 
 class IndicatorParams(Base):
     """Модель параметров для расчёта показателей"""
-    indicator_name: Mapped[str] = mapped_column(unique=True)
-    calc_as_average: Mapped[bool] = mapped_column(default=False)
-    project_name: Mapped[str]
-    label_track_name: Mapped[str] = mapped_column(nullable=True)
-    label_calc_name: Mapped[str] = mapped_column(nullable=True)
-    track_by_name: Mapped[bool] = mapped_column(default=False)
-    track_by_project: Mapped[bool] = mapped_column(default=False)
+    indicator_name: Mapped[str]  # имя показателя
+    # имя проекта для реализации расчёта по имени проекта
+    project_name: Mapped[str] = mapped_column(nullable=True)
+    # имя метки для реализации методики расчёта по метке
+    label_name: Mapped[str] = mapped_column(nullable=True)
+    # имя задачи для реализации методики расчёта по задаче
+    task_name: Mapped[str] = mapped_column(nullable=True)
+    # литерал описания для реализации методики расчёта на основании описания
+    description_literal: Mapped[str] = mapped_column(nullable=True, unique=True)
 
-    indicator_id: Mapped[int] = mapped_column(ForeignKey('indicator.id'))
-    indicator: Mapped[Indicator] = relationship("Indicator", back_populates="indicator_params")
+    # методика расчёта показателя по среднему (показатель является средней величиной)
+    calc_as_average: Mapped[bool] = mapped_column(default=False)
+    # методика расчёта на основании имени проекта
+    project_track_based_method: Mapped[bool] = mapped_column(default=False)
+    # методика расчёта на основании описания
+    description_based_method: Mapped[bool] = mapped_column(default=False)
+    # методика расчёта на основании количества выполненных задач
+    quantity_based_method: Mapped[bool] = mapped_column(default=False)
+    # методика расчёта на основании данных внешних файлов
+    file_based_method: Mapped[bool] = mapped_column(default=False)
+    # методика расчёта по имени метки
+    label_track_based_method: Mapped[bool] = mapped_column(default=False)
+    # методика расчёта по имени задачи
+    task_name_track_based_method: Mapped[bool] = mapped_column(default=False)
+
+    indicator: Mapped['Indicator'] = relationship("Indicator", back_populates="indicator_params")
+
+    user_id: Mapped[int] = mapped_column(ForeignKey('usermodel.id'))
+    user: Mapped[UserModel] = relationship("UserModel", back_populates="indicator_params")
+
+    # для каждого пользователя indicator_name уникален
+    __table_args__ = (
+        UniqueConstraint('user_id', 'indicator_name', name='uq_user_indicator'),
+    )
+
 
 
 class ScheduleTask(Base):
@@ -68,6 +100,7 @@ class Report(Base):
 
     def __repr__(self):
         return self.__tablename__
+
 
 class TodoistTask(Base):
     """Модель задач Todoist"""

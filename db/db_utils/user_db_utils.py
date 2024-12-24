@@ -2,7 +2,7 @@ from typing import Any
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import exists, select, update
+from sqlalchemy import select, update
 
 from db.database import connection
 from db.models import UserModel
@@ -12,7 +12,7 @@ from config import settings
 from logger_config import log
 import asyncio
 
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import joinedload
 from pprint import pprint
 
 from utils.common_utils import joined_to_dict
