@@ -6,7 +6,7 @@ from sqlalchemy import select, update, or_, func, and_
 from db.database import connection
 from db.models import TodoistTask
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from todoist_api.todoist_data import get_todoist_data
 from logger_config import log
 from typing import Sequence
@@ -32,58 +32,18 @@ async def save_todoist_tasks(*, session: AsyncSession, user_id: int, todoist_tok
     result = await session.execute(stmt)
     db_result = result.scalars().all()
     db_data = [line.to_dict() for line in db_result]
+    today = datetime.date.today() - datetime.timedelta(days=0)
+    # записи только за сегодня
+    filtered_todoist = [line for line in todoist_data if line['completed_at'].date() == today]
+    filtered_db = [line for line in db_data if line['completed_at'].date() == today]
 
-    today = datetime.date.today() - datetime.timedelta(days=1)
-    # Отфильтруем записи в db_data только за today
-    # filtered_db_data = [line for line in todoist_data if line['completed_at'].date() == today]
-    # #
-    # # # Проверим отличия todoist_data и filtered_db_data
-    # diff_data = [
-    #     line for line in todoist_data
-    #     if not any(line['task_item_id'] == db_line['task_item_id'] for db_line in filtered_db_data)
-    # ]
-    # pprint(diff_data)
-    # TODO ЗАГРУЖАТЬ ТОЛЬКО TODAY
-    diff_data = [
-        line for line in todoist_data
-        if all(
-            line['task_item_id'] != db_line['task_item_id']
-            and line['completed_at'].date() == today
-            for db_line in db_data
-        )
-    ]
+    db_task_ids = {line['task_item_id'] for line in filtered_db}
+    db_descriptions = {line['description'] for line in filtered_db}
 
-
-    # отличия todoist_data b и db_data
-    # diff_data = [line for line in todoist_data if
-    #              not any(line['task_item_id'] == db_line['task_item_id']
-    #                      # and line['completed_at'].date() == today
-    #                      for db_line in db_data)]
-
-
-    #
-    # diff_data = [line for line in todoist_data if
-    #              all(line['task_item_id'] != db_line['task_item_id']
-    #                      and line['completed_at'].date() == today
-    #                      for db_line in db_data)]
-
-    # обновления в данных, которые уже есть
-    # updated_data = [line for line in todoist_data if
-    #                 not any(line['description'] == db_line['description'] for db_line in db_data)]
-
-
-
-    updated_data = [
-        line for line in todoist_data
-        if all(
-            line['description'] != db_line['description']
-            and line['completed_at'].date() == today
-            for db_line in db_data
-        )
-    ]
-
-
-    pprint(updated_data)
+    # новые записи за сегодня
+    diff_data = [line for line in filtered_todoist if line['task_item_id'] not in db_task_ids]
+    # обновлённые записи по описанию
+    updated_data = [line for line in filtered_todoist if line['description'] not in db_descriptions]
 
     # добавление отличительных данных в БД
     if diff_data:
@@ -91,13 +51,29 @@ async def save_todoist_tasks(*, session: AsyncSession, user_id: int, todoist_tok
             data_list = [TodoistTask(**data) for data in diff_data]
             session.add_all(data_list)
             await session.commit()
-            log.success(f'задачи todoist {[data["task"] for data in diff_data]} успешно занесены в БД.')
+            log.success(f'Записи {[data["task"] for data in diff_data]} успешно занесены в БД.')
         except IntegrityError as e:
-            log.error('Ошибка БД при сохранении задач todoist.')
+            log.error('Ошибка БД при сохранении.')
             log.exception(e)
     else:
-        log.info('Выполненные задачи todoist для обновления отсутствуют.')
+        log.info('Задачи todoist для добавления отсутствуют.')
 
+    # обновление данных с изменённым описанием
+    if updated_data:
+        try:
+            for data in updated_data:
+                stmt = (
+                    update(TodoistTask)
+                    .where(TodoistTask.user_id == user_id, TodoistTask.task_item_id == data['task_item_id'])
+                    .values(description=data['description'])
+                )
+                await session.execute(stmt)
+            await session.commit()
+            log.success(f'Записи {[data["task"] for data in updated_data]} успешно обновлены в БД.')
+
+        except SQLAlchemyError as e:
+            log.error('Ошибка БД при обновлении.')
+            log.exception(e)
     return True
 
 

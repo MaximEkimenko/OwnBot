@@ -1,14 +1,17 @@
 import asyncio
 from typing import Dict
-from indicator import Indicator
-from report import Report
-from todoist_task import TodoistTask
-from schedule_task import ScheduleTask
+
+from classes.indicator import Indicator
+from classes.report import Report
+from classes.todoist_task import TodoistTask
+from classes.schedule_task import ScheduleTask
+from classes.indicator_param import IndicatorParam
+
 from logger_config import log
 from config import settings
 from db.database import connection
 from db.db_utils import user_db_utils, todoist_task_db_utils
-from indicator_param import IndicatorParam
+
 
 
 class User:
@@ -117,11 +120,11 @@ if __name__ == '__main__':
     # добавление todoist_token, обновление todoist_task
     # asyncio.run(_user.add_todoist_token(todoist_token=settings.TODOIST_TOKEN))
     # добавление новых todoist_task
-    asyncio.run(_user.save_todoist_data())
+    # asyncio.run(_user.save_todoist_data())
     # добавление параметров из json
     # asyncio.run(_user.indicator_params.add_params_json())
     # расчёт показателей
-    # asyncio.run(_user.indicators.calculate_indicators())
+    asyncio.run(_user.indicators.calculate_save_indicators())
 
     # print(_user.indicators)
 

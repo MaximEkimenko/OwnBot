@@ -4,8 +4,11 @@ from typing import List
 
 from calculate_methods.description_based import get_description_todoist_dict
 from calculate_methods.quantity_based import get_quantity_todoist_dict
-from indicator_param import IndicatorParam
-from todoist_task import TodoistTask
+from calculate_methods.pdf_based import pdf_indicator_to_db
+from classes.indicator_param import IndicatorParam
+from classes.todoist_task import TodoistTask
+from io import BytesIO
+from db.db_utils.indicator_db_utils import create_or_update_indicators
 from pathlib import Path
 from config import BaseDIR
 from db.db_utils import indicator_db_utils
@@ -45,21 +48,29 @@ class Indicator:
     #  3 Расчёт показателей, агрегация данных;
     #  4 Запись в БД;
 
-    async def calculate_indicators(self):
-        """Выполнение расчётов показателей"""
+    async def calculate_save_indicators(self):  # TODO найти
+        """Выполнение расчётов показателей для записи в БД"""
         # метод основанный на описании
         description_based_indicators = await get_description_todoist_dict(self.user_id)
 
         # количественней метод
         quantity_based = await get_quantity_todoist_dict(self.user_id)
 
-
         # агрегация
         indicators = description_based_indicators | quantity_based
 
         print(indicators)
-    async def read_settings(self):
-        """Чтение настроек"""
+
+    async def pdf_save_indicators(self, file_data: BytesIO):
+        """Выполнение расчёта показателей из pdf и запись в БД"""
+        return await pdf_indicator_to_db(self.user_id, file_data)
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':

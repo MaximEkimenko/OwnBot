@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, BIGINT, TIMESTAMP, DATETIME, UniqueConstraint
+from sqlalchemy import ForeignKey, BIGINT, TIMESTAMP, DATETIME, UniqueConstraint, DATE
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.sqlite import JSON
@@ -23,10 +23,11 @@ class UserModel(Base):
 
 class Indicator(Base):
     """Модель показателей"""
-    date: Mapped[datetime] = mapped_column(DATETIME)
+    date: Mapped[datetime] = mapped_column(DATE)
     user_id: Mapped[int] = mapped_column(ForeignKey('usermodel.id'))
-    indicator_name: Mapped[str] = mapped_column(unique=True)
-    params: Mapped[dict | None] = mapped_column(JSON)
+    indicator_name: Mapped[str]
+    indicator_value: Mapped[int] = mapped_column(default=0)
+    # params: Mapped[dict | None] = mapped_column(JSON)
     user: Mapped[UserModel] = relationship("UserModel", back_populates="indicators")
 
     indicator_params_id: Mapped[int] = mapped_column(ForeignKey('indicatorparams.id'))
@@ -34,7 +35,7 @@ class Indicator(Base):
 
     # для каждого пользователя indicator_name уникален
     __table_args__ = (
-        UniqueConstraint('user_id', 'indicator_name', name='uq_user_indicator'),
+        UniqueConstraint('user_id', 'indicator_name', 'date', name='uq_user_indicator'),
     )
 
 
@@ -48,8 +49,9 @@ class IndicatorParams(Base):
     # имя задачи для реализации методики расчёта по задаче
     task_name: Mapped[str] = mapped_column(nullable=True)
     # литерал описания для реализации методики расчёта на основании описания
-    description_literal: Mapped[str] = mapped_column(nullable=True, unique=True)
-
+    description_literal: Mapped[str] = mapped_column(nullable=True)
+    # параметры для чтения файлов
+    file_read_param: Mapped[str] = mapped_column(nullable=True)
     # методика расчёта показателя по среднему (показатель является средней величиной)
     calc_as_average: Mapped[bool] = mapped_column(default=False)
     # методика расчёта на основании имени проекта
@@ -58,8 +60,8 @@ class IndicatorParams(Base):
     description_based_method: Mapped[bool] = mapped_column(default=False)
     # методика расчёта на основании количества выполненных задач
     quantity_based_method: Mapped[bool] = mapped_column(default=False)
-    # методика расчёта на основании данных внешних файлов
-    file_based_method: Mapped[bool] = mapped_column(default=False)
+    # методика расчёта на основании данных файлов pdf, xlsx т.д.
+    file_based_method: Mapped[str] = mapped_column(nullable=True)
     # методика расчёта по имени метки
     label_track_based_method: Mapped[bool] = mapped_column(default=False)
     # методика расчёта по имени задачи
@@ -70,10 +72,13 @@ class IndicatorParams(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey('usermodel.id'))
     user: Mapped[UserModel] = relationship("UserModel", back_populates="indicator_params")
 
-    # для каждого пользователя indicator_name уникален
     __table_args__ = (
+        # для каждого пользователя indicator_name уникален
         UniqueConstraint('user_id', 'indicator_name', name='uq_user_indicator'),
+        # для каждого пользователя description_literal уникален
+        UniqueConstraint('user_id', 'description_literal', name='uq_user_description_literal'),
     )
+
 
 
 

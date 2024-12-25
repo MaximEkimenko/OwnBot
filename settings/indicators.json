@@ -8,7 +8,7 @@
         "project_track_based_method": true,
         "description_based_method": true,
         "quantity_based_method": false,
-        "file_based_method": false,
+
         "label_track_based_method": false,
         "task_name_track_based_method": false
     },
@@ -21,7 +21,7 @@
         "project_track_based_method": true,
         "description_based_method": true,
         "quantity_based_method": false,
-        "file_based_method": false,
+     
         "label_track_based_method": false,
         "task_name_track_based_method": false
     },
@@ -34,7 +34,6 @@
         "project_track_based_method": true,
         "description_based_method": true,
         "quantity_based_method": false,
-        "file_based_method": false,
         "label_track_based_method": false,
         "task_name_track_based_method": false
     },
@@ -46,7 +45,7 @@
         "project_track_based_method": false,
         "description_based_method": false,
         "quantity_based_method": false,
-        "file_based_method": true,
+
         "label_track_based_method": false,
         "task_name_track_based_method": false
     },
@@ -58,7 +57,7 @@
         "project_track_based_method": false,
         "description_based_method": false,
         "quantity_based_method": false,
-        "file_based_method": true,
+
         "label_track_based_method": false,
         "task_name_track_based_method": false
     },
@@ -70,20 +69,20 @@
         "project_track_based_method": false,
         "description_based_method": false,
         "quantity_based_method": false,
-        "file_based_method": true,
+
         "label_track_based_method": false,
         "task_name_track_based_method": false
     },
     {
         "indicator_name": "cndx",
         "project_name": "Wealth",
- 
+        "file_read_param": "составляет\\s+([\\d]+)",
 
         "calc_as_average": false,
         "project_track_based_method": false,
         "description_based_method": false,
         "quantity_based_method": false,
-        "file_based_method": true,
+        "file_based_method": "pdf",
         "label_track_based_method": false,
         "task_name_track_based_method": false
     },
@@ -96,7 +95,7 @@
         "project_track_based_method": true,
         "description_based_method": true,
         "quantity_based_method": false,
-        "file_based_method": false,
+    
         "label_track_based_method": false,
         "task_name_track_based_method": false
     },
@@ -108,7 +107,7 @@
         "project_track_based_method": false,
         "description_based_method": false,
         "quantity_based_method": true,
-        "file_based_method": false,
+
         "label_track_based_method": false,
         "task_name_track_based_method": false
     },
@@ -121,7 +120,7 @@
         "project_track_based_method": false,
         "description_based_method": false,
         "quantity_based_method": true,
-        "file_based_method": false,
+  
         "label_track_based_method": false,
         "task_name_track_based_method": false
     },
@@ -133,7 +132,7 @@
         "project_track_based_method": false,
         "description_based_method": false,
         "quantity_based_method": true,
-        "file_based_method": false,
+
         "label_track_based_method": false,
         "task_name_track_based_method": false
     },
@@ -145,7 +144,7 @@
         "project_track_based_method": false,
         "description_based_method": false,
         "quantity_based_method": true,
-        "file_based_method": false,
+
         "label_track_based_method": false,
         "task_name_track_based_method": false
     },
@@ -157,7 +156,7 @@
         "project_track_based_method": false,
         "description_based_method": false,
         "quantity_based_method": true, 
-        "file_based_method": false,
+
         "label_track_based_method": false,
         "task_name_track_based_method": false
     }

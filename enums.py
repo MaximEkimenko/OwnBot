@@ -14,3 +14,10 @@ class ReportType(str, enum.Enum):
     FULL = 'полный'
     INDICATOR = 'показатель'
     GRAPH = 'график'
+
+
+class FileBasedMethods(str, enum.Enum):
+    """Методы обработки файлов"""
+    PDF = 'pdf'
+    XLSX = 'xlsx'
+

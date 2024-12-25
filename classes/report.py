@@ -1,5 +1,5 @@
 from datetime import datetime
-from indicator import Indicator
+from classes.indicator import Indicator
 from enums import ReportType
 
 
