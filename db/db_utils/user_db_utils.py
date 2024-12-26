@@ -15,7 +15,12 @@ import asyncio
 from sqlalchemy.orm import joinedload
 from pprint import pprint
 
-from utils.common_utils import joined_to_dict
+
+def joined_to_dict(user_model, user_dict: dict, joined_models: list) -> dict:
+    """Добавление словарей связанных моделей"""
+    for model in joined_models:
+        user_dict[user_model.telegram_id].update({repr(model): [data.to_dict() for data in joined_models]})
+    return user_dict
 
 
 @connection
@@ -51,6 +56,7 @@ async def add_user_todoist_token(*, todoist_token: str, user_id: int, session: A
 @connection
 async def get_user_data_by_telegram_id(*, telegram_id: int, session: AsyncSession) -> dict[str | int, Any] | None:
     """Получение записи пользователя по telegram_id"""
+
     query = (select(UserModel).where(UserModel.telegram_id == telegram_id)
              .options(joinedload(UserModel.todoist_tasks))
              .options(joinedload(UserModel.tasks))
@@ -59,6 +65,10 @@ async def get_user_data_by_telegram_id(*, telegram_id: int, session: AsyncSessio
              )
     result = await session.execute(query)
     user = result.scalar()
+
+    if not user:
+        return None
+
     user_data = {
         user.telegram_id: user.to_dict()
     }

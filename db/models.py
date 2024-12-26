@@ -25,7 +25,7 @@ class Indicator(Base):
     """Модель показателей"""
     date: Mapped[datetime] = mapped_column(DATE)
     user_id: Mapped[int] = mapped_column(ForeignKey('usermodel.id'))
-    indicator_name: Mapped[str]
+    indicator_name: Mapped[str] = mapped_column(unique=False)
     indicator_value: Mapped[int] = mapped_column(default=0)
     # params: Mapped[dict | None] = mapped_column(JSON)
     user: Mapped[UserModel] = relationship("UserModel", back_populates="indicators")
@@ -35,7 +35,7 @@ class Indicator(Base):
 
     # для каждого пользователя indicator_name уникален
     __table_args__ = (
-        UniqueConstraint('user_id', 'indicator_name', 'date', name='uq_user_indicator'),
+        UniqueConstraint('user_id', 'indicator_name', 'date', name='uq_user_indicator_date'),
     )
 
 

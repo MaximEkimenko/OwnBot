@@ -43,10 +43,10 @@ class User:
         await todoist_task_db_utils.save_todoist_tasks(todoist_token=todoist_token, user_id=self.user_id)
         return await user_db_utils.add_user_todoist_token(todoist_token=todoist_token, user_id=self.user_id)
 
-    async def save_todoist_data(self) -> bool:
+    async def save_todoist_data(self) -> str:
         """Запуск выгрузки todois данных и загрузке в БД"""
         if not self.todoist_token:
-            return False
+            return 'Чтобы начать пользоваться этим функционалом должен быть введён корректный todoist token.'
         return await todoist_task_db_utils.save_todoist_tasks(todoist_token=self.todoist_token,
                                                               user_id=self.user_id)
 
@@ -54,6 +54,10 @@ class User:
     async def auth(cls, telegram_id: int):  # реализация фабричного метода
         """Авторизация пользователя по telegram_id"""
         user_data = await user_db_utils.get_user_data_by_telegram_id(telegram_id=telegram_id)
+
+        if not user_data:
+            raise ValueError('Такого пользователя не существует.')
+
         todoist_tasks = None
         reports = None
         schedules = None
@@ -83,10 +87,6 @@ class User:
                              ) for data in schedules_data
             ])
 
-        # TODO получить данные показателей
-        #  инициализировать экземпляр Indicators
-        #  отдать в класс USER
-
         return User(
             telegram_id=user_data[telegram_id]['telegram_id'],
             user_id=user_data[telegram_id]['id'],
@@ -94,7 +94,6 @@ class User:
             todoist_tasks=todoist_tasks,
             schedules=schedules,
             reports=reports,
-
         )
 
     def get_user_data(self) -> Dict:
@@ -114,9 +113,10 @@ class User:
 
 if __name__ == '__main__':
     # регистрация пользователя
-    # asyncio.run(User.register(telegram_id=settings.SUPER_USER_TG_ID))
+    asyncio.run(User.register(telegram_id=settings.SUPER_USER_TG_ID))
     # аутентификация пользователя
-    _user = asyncio.run(User.auth(settings.SUPER_USER_TG_ID))
+    # _user = asyncio.run(User.auth(settings.SUPER_USER_TG_ID))
+    # _user = asyncio.run(User.auth(123))
     # добавление todoist_token, обновление todoist_task
     # asyncio.run(_user.add_todoist_token(todoist_token=settings.TODOIST_TOKEN))
     # добавление новых todoist_task

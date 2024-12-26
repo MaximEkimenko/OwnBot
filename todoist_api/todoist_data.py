@@ -27,7 +27,7 @@ async def get_todoist_data(token: str) -> list[dict[str: Any | None]]:
         """
         api = TodoistAPIAsync(token)
         done_items_url = 'https://api.todoist.com/sync/v9/completed/get_all'  # URL получения выполненных задач
-        headers = {"Authorization": f'Bearer {token}', "sync_token": '*'}  # заголовки
+        headers = {"Authorization": f'Bearer {token}', "sync_token": '*'}
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url=done_items_url, headers=headers) as response:

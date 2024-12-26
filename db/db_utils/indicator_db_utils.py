@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 from collections import defaultdict
+from pprint import pprint
 from typing import Sequence
 
 from db.database import connection
@@ -14,6 +15,7 @@ from pathlib import Path
 import json
 from logger_config import log
 from sqlalchemy.exc import IntegrityError
+from config import today
 
 
 # CREATE
@@ -50,21 +52,27 @@ async def add_indicator_params_json(user_id: int, session: AsyncSession) -> bool
 
 
 @connection
-async def create_or_update_indicators(user_id: int, data: tuple, session: AsyncSession):
+async def create_or_update_indicators(user_id: int, data: dict, session: AsyncSession) -> str:
     """Заполнение показателей из словаря data"""
-    today = datetime.date.today()
-    indicators_dict = data[0]
-    indicator_params_id = data[1]
-    for indicator_name, indicator_value in indicators_dict.items():
-        stmt = select(exists()
-                      .where(Indicator.user_id == user_id,
-                             Indicator.indicator_name == indicator_name,
-                             Indicator.date == today)
+    result_string = ''
+    print(f'{data=}')
+    for indicator_name, indicator_value_dict in data.items():
+        indicator_params_id = indicator_value_dict['params_id']
+        indicator_value = indicator_value_dict['value']
+        stmt = (select(Indicator.indicator_value)
+                .where(Indicator.user_id == user_id,
+                       Indicator.indicator_name == indicator_name,
+                       Indicator.date == today)
+                )
+        exist_indicator_value = await session.scalar(stmt)
+        # если данные есть и они не изменились
+        if exist_indicator_value == indicator_value:
+            result_string += (f'Значение показателя {indicator_name} = {indicator_value}, '
+                              f'для пользователя id={user_id} не изменилось.\n')
+            log.debug(result_string)
+            continue
 
-                      )
-        is_exist = await session.scalar(stmt)
-        if not is_exist:
-            print('NOT EXIST!')
+        if not exist_indicator_value:
             indicator = Indicator(user_id=user_id,
                                   indicator_name=indicator_name,
                                   indicator_params_id=indicator_params_id,
@@ -73,9 +81,11 @@ async def create_or_update_indicators(user_id: int, data: tuple, session: AsyncS
                                   )
             session.add(indicator)
             await session.commit()
-            return indicator.id
+            result_string += (f'Показатель {indicator_name} = {indicator_value}, '
+                              f'для пользователя id={user_id} добавлен.\n')
+            log.debug(result_string)
+            continue
         else:
-            print('EXIST!')
             stmt = (
                 update(Indicator)
                 .where(Indicator.user_id == user_id,
@@ -85,29 +95,11 @@ async def create_or_update_indicators(user_id: int, data: tuple, session: AsyncS
             )
             await session.execute(stmt)
             await session.commit()
-
-
-
-
-
-
-
-    # try:
-    #     while True:
-    #         secret_key = random.randint(100000, 999999)
-    #         stmt = select(exists().where(SecretKey.secret_key == secret_key))
-    #         is_exist = await session.scalar(stmt)
-    #         if not is_exist:
-    #             break
-    #
-    #     secret = SecretKey(secret_key=secret_key, secret_key_status=enums.SecretKeyStatus.ACTIVE)
-    #     session.add(secret)
-    #     await session.commit()
-    #     logger.debug('Created secret key successfully.')
-    #     return {'secret_key_id': secret.id, 'secret_key': secret.secret_key}
-    # except SQLAlchemyError:
-    #     logger.error('Error creating secret key.')
-    #     return None
+            result_string += (f'Показатель {indicator_name} = {indicator_value}, '
+                              f'для пользователя id={user_id} обновлён.\n')
+            log.debug(result_string)
+            continue
+    return result_string
 
 
 # READ
@@ -140,7 +132,7 @@ async def get_literal_project_dict(user_id: int) -> dict:
         project_name = data.project_name
         description_literal = data.description_literal
         indicator_name = data.indicator_name
-        result[project_name][description_literal] = indicator_name
+        result[project_name][description_literal] = {'indicator_name': indicator_name, 'params_id': data.id}
 
     return dict(result)
 
@@ -154,7 +146,7 @@ async def get_project_indicator_dict(user_id: int):
         project_name = data.project_name
         indicator_name = data.indicator_name
         if project_name not in result:
-            result[project_name] = indicator_name
+            result[project_name] = {'indicator_name': indicator_name, 'params_id': data.id}
 
     return result
 
@@ -169,8 +161,7 @@ async def get_indicator_file_params_dict(user_id: int, file_method: str) -> dict
             indicator_name = data.indicator_name
             file_read_params = data.file_read_param
             params_id = data.id
-            result[indicator_name] = file_read_params, params_id
-
+            result[indicator_name] = {'file_read_params': file_read_params, 'params_id': params_id}
 
     return result
 
@@ -178,5 +169,6 @@ async def get_indicator_file_params_dict(user_id: int, file_method: str) -> dict
 if __name__ == '__main__':
     pass
     # asyncio.run(add_indicator_params_json())
-    # asyncio.run(get_indicator_params(params_filter={'description_based_method': True}))
+    # print(asyncio.run(get_indicator_params(params_filter={'description_based_method': True})))
+    asyncio.run(get_literal_project_dict(user_id=1))
     # print(asyncio.run(create_or_update_indicators(user_id=1, data={'cndx': 1})))

@@ -48,18 +48,16 @@ class Indicator:
     #  3 Расчёт показателей, агрегация данных;
     #  4 Запись в БД;
 
-    async def calculate_save_indicators(self):  # TODO найти
+    async def calculate_save_indicators(self) -> tuple:
         """Выполнение расчётов показателей для записи в БД"""
         # метод основанный на описании
-        description_based_indicators = await get_description_todoist_dict(self.user_id)
-
+        description_based_result = await get_description_todoist_dict(self.user_id)
         # количественней метод
-        quantity_based = await get_quantity_todoist_dict(self.user_id)
+        quantity_result = await get_quantity_todoist_dict(self.user_id)
 
-        # агрегация
-        indicators = description_based_indicators | quantity_based
+        return description_based_result, quantity_result
 
-        print(indicators)
+
 
     async def pdf_save_indicators(self, file_data: BytesIO):
         """Выполнение расчёта показателей из pdf и запись в БД"""

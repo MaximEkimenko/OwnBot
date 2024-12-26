@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
+import datetime
 
 
 class Settings(BaseSettings):
@@ -19,6 +20,8 @@ class Settings(BaseSettings):
 settings = Settings()
 BaseDIR = settings.BASE_DIR
 TIME_ZONE = 6
+today = datetime.date.today() - datetime.timedelta(days=0)
+
 
 if __name__ == "__main__":
     print(settings.BASE_DIR)
