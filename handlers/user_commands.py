@@ -41,11 +41,12 @@ async def handler_ind(message: types.Message):
 
 @router.message(Command('update'))
 async def handler_update(message: types.Message):
+    """Команда дл ручного обновления показателей"""
     user = await user_auth(message)
     if user is False:
         return
-    command_elements = message.text.split()[1:]  # строка параметровф
-    # верификация ввода
+    command_elements = message.text.split()[1:]  # строка параметров
+    # валидация ввода
     if len(command_elements) % 2 != 0:
         await message.answer(text='Неверно введена команда /update. '
                                   'Вид команды /update:\nпоказатель1 значение1 показатель2 значение2.')
@@ -54,17 +55,14 @@ async def handler_update(message: types.Message):
         return
 
     indicators = command_elements[::2]
-    print(f'{indicators=}')
     values = command_elements[1::2]
-    print(f'{values=}')
-
 
     for indicator in indicators:
         try:
             await verify_string_as_filename(indicator)
         except ValueError as e:
             await message.answer(text=f'Неверно введён показатель {indicator}. {e.args[0]}.')
-            log.warning(f"Показатель {indicators} не прошёл верификацию. {e.args[0]}.")
+            log.warning(f"Показатель {indicators} не прошёл валидацию. {e.args[0]}.")
             return
 
     for value in values:
@@ -73,28 +71,21 @@ async def handler_update(message: types.Message):
         except ValueError as e:
             await message.answer(text=f'Неверно введёно значение показателя {value}. '
                                       f'Значение должно быть целым числом.')
-            log.warning(f"Введено значение показателя {values}. {e.args[0]}.")
+            log.warning(f"Введено неверное значение показателя {value}. {e.args[0]}.")
             return
 
-    #
-    #
-    # try:
-    #     map(verify_string_as_filename, indicators)
-    # except ValueError as e:
-    #     await message.answer(text=f'Неверно введён показатель. {e.args[0]}.')
-    #     log.warning(f"Показатель {indicators} не прошёл верификацию. {e.args[0]}.")
-    #     return
-    #
-    # try:
-    #     map(int, values)
-    # except ValueError as e:
-    #     await message.answer(text=f'Неверно введёно значение показателя. Значение должно быть целым числом.')
-    #     log.warning(f"Введено значение показателя {values}. {e.args[0]}.")
-    #     return
-
     indicators_dict = dict(zip(indicators, values))
-    print(indicators_dict)
+    # верификация показателей
+    verificated_dict = await user.indicators.verificate_indicators(indicators_dict)
+    if verificated_dict.get('*failed'):
+        await message.answer(text=f'Показателя {verificated_dict["*failed"]} не существует.')
+        log.warning(f'Ввод несуществующего показателя {verificated_dict["*failed"]}')
+        return
 
+    # обновление показателей
+    result = await user.indicators.manual_update_save_indicators(verificated_dict)
+    await message.answer(result)
+    return
 
 
 

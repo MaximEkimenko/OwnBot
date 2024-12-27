@@ -54,7 +54,7 @@ class User:
     async def auth(cls, telegram_id: int):  # реализация фабричного метода
         """Авторизация пользователя по telegram_id"""
         user_data = await user_db_utils.get_user_data_by_telegram_id(telegram_id=telegram_id)
-
+        print(user_data)
         if not user_data:
             raise ValueError('Такого пользователя не существует.')
 
@@ -113,9 +113,9 @@ class User:
 
 if __name__ == '__main__':
     # регистрация пользователя
-    asyncio.run(User.register(telegram_id=settings.SUPER_USER_TG_ID))
+    # asyncio.run(User.register(telegram_id=settings.SUPER_USER_TG_ID))
     # аутентификация пользователя
-    # _user = asyncio.run(User.auth(settings.SUPER_USER_TG_ID))
+    _user = asyncio.run(User.auth(settings.SUPER_USER_TG_ID))
     # _user = asyncio.run(User.auth(123))
     # добавление todoist_token, обновление todoist_task
     # asyncio.run(_user.add_todoist_token(todoist_token=settings.TODOIST_TOKEN))
@@ -124,7 +124,11 @@ if __name__ == '__main__':
     # добавление параметров из json
     # asyncio.run(_user.indicator_params.add_params_json())
     # расчёт показателей
-    asyncio.run(_user.indicators.calculate_save_indicators())
+    # print(asyncio.run(_user.indicators.verificate_indicators(indicators_to_update={'sdgsdg': 123, 'cndx': 11})))
+    # print(asyncio.run(_user.indicators.verificate_indicators(indicators_to_update={'steps': 123, 'cndx': 11})))
+    #
+    # print(asyncio.run(_user.indicators.verificate_indicators(indicators_to_update={'kcals': 123, 'cndx': 11})))
+    # print(_user.indicators))
 
     # print(_user.indicators)
 

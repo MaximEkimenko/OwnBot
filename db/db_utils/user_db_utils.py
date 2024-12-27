@@ -58,9 +58,9 @@ async def get_user_data_by_telegram_id(*, telegram_id: int, session: AsyncSessio
     """Получение записи пользователя по telegram_id"""
 
     query = (select(UserModel).where(UserModel.telegram_id == telegram_id)
-             .options(joinedload(UserModel.todoist_tasks))
+             # .options(joinedload(UserModel.todoist_tasks))
              .options(joinedload(UserModel.tasks))
-             .options(joinedload(UserModel.indicators))
+             # .options(joinedload(UserModel.indicators))
              .options(joinedload(UserModel.reports))
              )
     result = await session.execute(query)
@@ -73,7 +73,7 @@ async def get_user_data_by_telegram_id(*, telegram_id: int, session: AsyncSessio
         user.telegram_id: user.to_dict()
     }
 
-    for joined_model in (user.todoist_tasks, user.tasks, user.reports, user.indicators):
+    for joined_model in (user.tasks, user.reports):
         joined_to_dict(user_model=user, user_dict=user_data, joined_models=joined_model)
 
     return user_data

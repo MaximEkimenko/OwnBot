@@ -55,7 +55,6 @@ async def add_indicator_params_json(user_id: int, session: AsyncSession) -> bool
 async def create_or_update_indicators(user_id: int, data: dict, session: AsyncSession) -> str:
     """Заполнение показателей из словаря data"""
     result_string = ''
-    print(f'{data=}')
     for indicator_name, indicator_value_dict in data.items():
         indicator_params_id = indicator_value_dict['params_id']
         indicator_value = indicator_value_dict['value']
@@ -64,21 +63,24 @@ async def create_or_update_indicators(user_id: int, data: dict, session: AsyncSe
                        Indicator.indicator_name == indicator_name,
                        Indicator.date == today)
                 )
-        exist_indicator_value = await session.scalar(stmt)
+        result = await session.execute(stmt)
+        exist_indicator_value = result.scalar_one_or_none()
         # если данные есть и они не изменились
-        if exist_indicator_value == indicator_value:
+        if exist_indicator_value == int(indicator_value):
             result_string += (f'Значение показателя {indicator_name} = {indicator_value}, '
                               f'для пользователя id={user_id} не изменилось.\n')
             log.debug(result_string)
             continue
 
-        if not exist_indicator_value:
-            indicator = Indicator(user_id=user_id,
-                                  indicator_name=indicator_name,
-                                  indicator_params_id=indicator_params_id,
-                                  indicator_value=indicator_value,
-                                  date=today
-                                  )
+        if exist_indicator_value is None:
+            indicator = Indicator(
+                date=today,
+                user_id=user_id,
+                indicator_name=indicator_name,
+                indicator_params_id=indicator_params_id,
+                indicator_value=indicator_value,
+
+            )
             session.add(indicator)
             await session.commit()
             result_string += (f'Показатель {indicator_name} = {indicator_value}, '
@@ -166,9 +168,20 @@ async def get_indicator_file_params_dict(user_id: int, file_method: str) -> dict
     return result
 
 
+@connection
+async def get_indicator_params_id_dict(session: AsyncSession, user_id: int) -> dict:
+    """Получение словаря показатель - параметры показателя"""
+    stmt = select(IndicatorParams).where(IndicatorParams.user_id == user_id)
+    result = await session.execute(stmt)
+    indicator_params = result.scalars().all()
+
+    return {indicator.indicator_name: indicator.id for indicator in indicator_params}
+
+
 if __name__ == '__main__':
     pass
     # asyncio.run(add_indicator_params_json())
     # print(asyncio.run(get_indicator_params(params_filter={'description_based_method': True})))
-    asyncio.run(get_literal_project_dict(user_id=1))
+    # asyncio.run(get_literal_project_dict(user_id=1))
+    asyncio.run(get_indicator_params_id_dict(user_id=1))
     # print(asyncio.run(create_or_update_indicators(user_id=1, data={'cndx': 1})))

@@ -17,7 +17,6 @@ from config import today
 @connection
 async def save_todoist_tasks(*, session: AsyncSession, user_id: int, todoist_token: str) -> str:
     """Сохранение в БД данных todoist"""
-    # TODO Разобраться с тем, что в случае обновления по description в result string попадает и diff и update записи
     # данные todoist
     todoist_data = await get_todoist_data(todoist_token)
     result_string = ''
@@ -41,7 +40,7 @@ async def save_todoist_tasks(*, session: AsyncSession, user_id: int, todoist_tok
     filtered_db = [line for line in db_data if line['completed_at'].date() == today]
 
     db_task_ids = {line['task_item_id'] for line in filtered_db}
-    db_descriptions = {line['description'] for line in filtered_db}
+    # db_descriptions = {line['description'] for line in filtered_db}
 
     # новые записи за сегодня
     diff_data = [line for line in filtered_todoist if line['task_item_id'] not in db_task_ids]
@@ -57,7 +56,7 @@ async def save_todoist_tasks(*, session: AsyncSession, user_id: int, todoist_tok
             data_list = [TodoistTask(**data) for data in diff_data]
             session.add_all(data_list)
             await session.commit()
-            result_string += f'Записи {[data["task"] for data in diff_data]} успешно сохранены.\n'
+            result_string += f'Задачи {[data["task"] for data in diff_data]} успешно сохранены.\n'
             log.success(result_string)
         except IntegrityError as e:
             log.error('Ошибка БД при сохранении.')

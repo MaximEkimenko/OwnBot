@@ -21,7 +21,8 @@ settings = Settings()
 BaseDIR = settings.BASE_DIR
 TIME_ZONE = 6
 today = datetime.date.today() - datetime.timedelta(days=0)
-
+# TODO найти лучшее решение передачи даты начала отчёта по умолчанию
+first_day_to_report = datetime.date(year=2024, month=1, day=1)
 
 if __name__ == "__main__":
     print(settings.BASE_DIR)

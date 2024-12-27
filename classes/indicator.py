@@ -8,7 +8,7 @@ from calculate_methods.pdf_based import pdf_indicator_to_db
 from classes.indicator_param import IndicatorParam
 from classes.todoist_task import TodoistTask
 from io import BytesIO
-from db.db_utils.indicator_db_utils import create_or_update_indicators
+from db.db_utils.indicator_db_utils import get_indicator_params_id_dict, create_or_update_indicators
 from pathlib import Path
 from config import BaseDIR
 from db.db_utils import indicator_db_utils
@@ -16,6 +16,7 @@ from db.db_utils import indicator_db_utils
 
 class Indicator:
     """Показатель"""
+
     def __init__(self,
                  user_id: int,
                  name: str = None,
@@ -57,21 +58,27 @@ class Indicator:
 
         return description_based_result, quantity_result
 
+    async def verificate_indicators(self, indicators_to_update: dict) -> dict:
+        """Валидация показателей"""
+        exist_indicators = await get_indicator_params_id_dict(user_id=self.user_id)
 
+        valid_indicators = dict()
+        for indicator_to_update, indicator_value in indicators_to_update.items():
+            if indicator_to_update not in exist_indicators:
+                return {'*failed': indicator_to_update}
+            # если все показатели верные
+            valid_indicators[indicator_to_update] = {'value': indicator_value,
+                                                     'params_id': exist_indicators[indicator_to_update]}
+        return valid_indicators
 
     async def pdf_save_indicators(self, file_data: BytesIO):
         """Выполнение расчёта показателей из pdf и запись в БД"""
         return await pdf_indicator_to_db(self.user_id, file_data)
 
-
-
-
-
-
-
+    async def manual_update_save_indicators(self, indicator_data):
+        """Сохранение данных из команды update"""
+        return await create_or_update_indicators(self.user_id, data=indicator_data)
 
 
 if __name__ == '__main__':
     pass
-
-
