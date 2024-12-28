@@ -9,7 +9,7 @@ from db.models import IndicatorParams
 from db.models import Indicator
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, exists
+from sqlalchemy import select, update
 from config import BaseDIR
 from pathlib import Path
 import json

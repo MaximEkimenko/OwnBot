@@ -8,9 +8,9 @@ from logger_config import log
 
 from db.models import Indicator, IndicatorParams
 from db.database import connection
+from db.models import Report as ReportModel
 
-from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy import select, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -22,8 +22,6 @@ async def get_all_indicators_report_data(user_id,
                                          ) -> dict:
     """Получение данных для отчёта"""
     result_dict = defaultdict(dict)
-    start_date = first_day_to_report if start is None else start
-    end_date = today if end is None else end
     stmt = (
         select(
             Indicator.id,
@@ -31,11 +29,10 @@ async def get_all_indicators_report_data(user_id,
             Indicator.indicator_name,
             Indicator.indicator_value,
             IndicatorParams.calc_as_average
-
         )
         .join(Indicator.indicator_params)
         .where(Indicator.user_id == user_id)
-        .filter(Indicator.date.between(start_date, end_date))
+        .filter(Indicator.date.between(start, end))
     )
     result = await session.execute(stmt)
     report_data = result.mappings()
@@ -45,12 +42,33 @@ async def get_all_indicators_report_data(user_id,
         date = data['date']
         indicator_value = data['indicator_value']
         calc_as_average = data['calc_as_average']
-        result_dict[indicator_name].update({date: {'indicator_value': indicator_value,
-                                                   'calc_as_average': calc_as_average
-                                                   }
-                                            })
+        result_dict[indicator_name].update({
+            'calc_as_average': calc_as_average,
+            date: {'indicator_value': indicator_value},
+        })
 
     return dict(result_dict)
+
+
+@connection
+async def save_report_data(data: dict, session: AsyncSession) -> None:
+    """Сохранение отчёта"""
+    stmt = select(exists().where(ReportModel.name == data.get('name')))
+    result = await session.execute(stmt)
+    is_exists = result.scalar()
+    if is_exists:
+        log.debug(f'Отчёт {data.get('name')} уже существует.')
+        return
+
+    try:
+        report = ReportModel(**data)
+        session.add(report)
+        await session.commit()
+        log.debug(f'Данные отчёта сохранены {data["name"]}.')
+    except Exception as e:
+        await session.rollback()
+        log.error(f'Ошибка при сохранении отчёта.')
+        log.exception(e)
 
 
 # TODO delete if not used
@@ -98,4 +116,6 @@ async def get_all_indicators_report_data(user_id,
 
 
 if __name__ == '__main__':
-    asyncio.run(get_all_indicators_report_data(user_id=1))
+    # asyncio.run(get_all_indicators_report_data(user_id=1))
+    asyncio.run(save_report_data(data={'name':1}))
+    # save_report_data

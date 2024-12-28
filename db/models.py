@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, BIGINT, TIMESTAMP, DATETIME, UniqueConstraint, DATE
+from sqlalchemy import ForeignKey, BIGINT, TIMESTAMP, UniqueConstraint, DATE, LargeBinary
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.sqlite import JSON
@@ -80,8 +80,6 @@ class IndicatorParams(Base):
     )
 
 
-
-
 class ScheduleTask(Base):
     """Модель задания по расписанию"""
     name: Mapped[str] = mapped_column(unique=True)
@@ -100,6 +98,7 @@ class Report(Base):
     report_type: Mapped[ReportType] = mapped_column(default=ReportType.FULL)
     start: Mapped[datetime] = mapped_column(TIMESTAMP)
     end: Mapped[datetime] = mapped_column(TIMESTAMP)
+    content: Mapped[LargeBinary] = mapped_column(LargeBinary, nullable=True)
 
     user: Mapped[UserModel] = relationship("UserModel", back_populates="reports")
 

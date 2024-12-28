@@ -18,17 +18,13 @@ class User:
     def __init__(self, telegram_id: int,
                  todoist_token: str | None = None,
                  user_id: int | None = None,
-                 reports: tuple[Report | None] = None,
                  schedules: tuple[ScheduleTask | None] = None,
                  todoist_tasks: tuple[TodoistTask | None] = None,
-                 # indicators: Indicator = None,
-                 # indicator_params: IndicatorParam = None
                  ):
         self.telegram_id = telegram_id
         self.todoist_token = todoist_token
         self.user_id = user_id
         self.todoist_tasks = todoist_tasks
-        self.reports = reports
         self.schedules = schedules
         self.indicators = Indicator(user_id=self.user_id)
         self.indicator_params = IndicatorParam(user_id=self.user_id)
@@ -54,38 +50,11 @@ class User:
     async def auth(cls, telegram_id: int):  # реализация фабричного метода
         """Авторизация пользователя по telegram_id"""
         user_data = await user_db_utils.get_user_data_by_telegram_id(telegram_id=telegram_id)
-        print(user_data)
         if not user_data:
             raise ValueError('Такого пользователя не существует.')
 
         todoist_tasks = None
-        reports = None
         schedules = None
-        if task_data := user_data[telegram_id].get('todoisttask'):
-            todoist_tasks = tuple([TodoistTask(task=data['task'],
-                                               project=data['project'],
-                                               labels=data['labels'],
-                                               description=data['description'],
-                                               completed_at=data['completed_at'],
-                                               priority=data['priority']
-                                               ) for data in task_data])
-
-        if task_data := user_data[telegram_id].get('report'):
-            reports = tuple([Report
-                             (name=data['name'],
-                              report_type=data['report_type'],
-                              start=data['start'],
-                              end=data['end'],
-                              ) for data in task_data])
-
-        if schedules_data := user_data[telegram_id].get('scheduletask'):
-            schedules = tuple([
-                ScheduleTask(name=data['name'],
-                             task_type=data['task_type'],
-                             schedule=data['schedule'],
-                             action=data['action'],
-                             ) for data in schedules_data
-            ])
 
         return User(
             telegram_id=user_data[telegram_id]['telegram_id'],
@@ -93,8 +62,18 @@ class User:
             todoist_token=user_data[telegram_id].get('todoist_token'),
             todoist_tasks=todoist_tasks,
             schedules=schedules,
-            reports=reports,
-        )
+         )
+
+    async def reports_config(self, report_name: str | None = None,
+                             report_type: Report | None = None,
+                             content: str | None = None):
+        """ Инициализация отчёта"""
+        return Report(
+            user_id=self.user_id,
+            name=report_name,
+            report_type=report_type,
+            content=content
+            )
 
     def get_user_data(self) -> Dict:
         """ Логика получения данных пользователя """
@@ -102,9 +81,6 @@ class User:
     def indicators_config(self):
         """Логика настройки индикаторов"""
         pass
-
-    def reports_config(self):
-        """Логика настройки отчетов"""
 
     def plan_tasks(self):
         """Логика планирования задач"""
