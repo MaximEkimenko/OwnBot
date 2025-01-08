@@ -40,9 +40,9 @@ async def set_commands(bot: Bot):
     await bot.set_my_commands(commands)
 
 
-async def scheduled_go(bot: Bot):
+async def scheduled_go():
     """Команда /go по расписанию"""
-    await bot.send_message(chat_id=settings.SUPER_USER_TG_ID, text='WORKED!')
+    print('Worked!')
 
 
 def setup_scheduler():
@@ -61,7 +61,7 @@ async def main():
     dp.include_router(main_router)
     dp.startup.register(on_startup)
 
-    setup_scheduler()  # Настройка расписания
+    # setup_scheduler()  # Настройка расписания
     await bot.delete_webhook(True)
     await set_commands(bot)
 
