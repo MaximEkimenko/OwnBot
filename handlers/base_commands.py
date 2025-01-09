@@ -27,19 +27,6 @@ async def handle_start(message: types.Message):
     )
 
 
-
-
-@router.message(Command("test"))
-async def handle_help_reg(message: types.Message):
-    """ТЕСТ"""
-
-
-    text = 'test'
-    await message.answer(
-        text=text,
-    )
-
-
 @router.message(Command("help"))
 async def handle_help(message: types.Message):
     """Инструкция пользователя"""

@@ -3,26 +3,32 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.types import BotCommand
 from aiogram.enums.parse_mode import ParseMode
-from aiogram import types
 from datetime import datetime
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 from config import settings
 
 from logger_config import log
 
 from handlers import router as main_router
+from utils.scheduler_utils.setup_scheduler import setup_scheduler
 
 
 # TODO
 #  scheduler
+#  add fixed_sum field in indicators, change cndx formula to cndx + fixed sum
+#  делать перезапуск расписания по команде пользователя
 #  migrate from old version on the phone
 #  small todos in files + refactor + exceptions
-#  refactor with gpt (give him code and watch fo result)
+#  refactor with gpt (give him code and watch for result)
 #  tests
 #  helps + docs + method description
 #  docker, migrate from phone to server or cloud
-#  new features: report types, user settings interface
+#  new features: report types, report settings interface,
+#  user settings interface, scheduler settings interface
+
+
+
 
 
 async def on_startup():  # функция выполняется при запуске бота
@@ -33,23 +39,10 @@ async def on_shutdown():
     log.info(f"bot offline {datetime.now()}")
 
 
-# TODO scheduler перенести куда надо
 async def set_commands(bot: Bot):
     """Установка команд в меню"""
     commands = [BotCommand(command="/go", description="Выполнить расчёт, получить отчёт.")]
     await bot.set_my_commands(commands)
-
-
-async def scheduled_go():
-    """Команда /go по расписанию"""
-    print('Worked!')
-
-
-def setup_scheduler():
-    """Настройщик расписания"""
-    scheduler = AsyncIOScheduler()
-    scheduler.add_job(scheduled_go, "cron", hour=14, minute=40)
-    scheduler.start()
 
 
 async def main():
@@ -61,11 +54,11 @@ async def main():
     dp.include_router(main_router)
     dp.startup.register(on_startup)
 
-    # setup_scheduler()  # Настройка расписания
     await bot.delete_webhook(True)
     await set_commands(bot)
-
+    setup_scheduler(bot=bot)  # Настройка расписания
     await dp.start_polling(bot)
+
 
     dp.startup.register(on_shutdown)
 

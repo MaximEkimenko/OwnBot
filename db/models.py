@@ -81,10 +81,11 @@ class IndicatorParams(Base):
 
 
 class ScheduleTask(Base):
+    # TODO
     """Модель задания по расписанию"""
     name: Mapped[str] = mapped_column(unique=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('usermodel.id'))
-    task_type: Mapped[TaskType] = mapped_column(default=TaskType.ONCE)
+    task_type: Mapped[TaskType] = mapped_column(default=TaskType.REMINDER)
     schedule: Mapped[str]
     action: Mapped[str]
 

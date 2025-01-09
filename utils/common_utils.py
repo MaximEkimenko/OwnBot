@@ -54,3 +54,10 @@ async def verify_string_as_filename(input_string: str) -> str:
     if input_string.strip() != input_string or input_string.endswith('.'):
         raise ValueError("Строка не должна начинаться или заканчиваться пробелами или точками.")
     return input_string
+
+
+def get_bot_for_schedule(message: types.Message, schedule_bot):
+    """Проверка задачи по расписанию"""
+    if schedule_bot:
+        return schedule_bot
+    return message.bot

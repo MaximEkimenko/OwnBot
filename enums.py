@@ -7,6 +7,8 @@ class TaskType(str, enum.Enum):
     ONCE = 'разовая'
     DAILY = 'ежедневная'
     WEEKLY = 'еженедельная'
+    REMINDER = 'напоминание'
+    TASK = 'задача'
 
 
 class ReportType(str, enum.Enum):
