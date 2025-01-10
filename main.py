@@ -15,21 +15,21 @@ from utils.scheduler_utils.setup_scheduler import setup_scheduler
 
 
 # TODO
-#  scheduler
-#  add fixed_sum field in indicators, change cndx formula to cndx + fixed sum
+#  scheduler:
+#   функция создания словаря параметров напоминания и задачи из входящего словаря параметров из команд
+#   CRUD напоминания и задачи
 #  делать перезапуск расписания по команде пользователя
+#  добавить показатель cash заполнять его update, построить на него график перезаполнить показатели
+#  переписать логи на %s строки при logging и {} строки при loguru
+#  переписать все свои raise на собственные exceptions (начать с валидатров)
+#  удалить log.exception(e), добавить log(text, exc_info=e)
 #  migrate from old version on the phone
 #  small todos in files + refactor + exceptions
 #  refactor with gpt (give him code and watch for result)
 #  tests
 #  helps + docs + method description
 #  docker, migrate from phone to server or cloud
-#  new features: report types, report settings interface,
-#  user settings interface, scheduler settings interface
-
-
-
-
+#  new features: report types, report settings interface, user settings interface, scheduler settings interface
 
 async def on_startup():  # функция выполняется при запуске бота
     log.info(f"bot online {datetime.now()}")

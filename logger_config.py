@@ -1,4 +1,5 @@
 from loguru import logger
+
 import os
 from config import BaseDIR
 
@@ -23,7 +24,8 @@ logger.add(
 )
 
 # Вывод логов в JSON-файл с ротацией и сжатием
-JSON_LOG_FILE = os.path.join(LOG_DIR, "log.json")
+# JSON_LOG_FILE = os.path.join(LOG_DIR, "log.json")
+JSON_LOG_FILE = LOG_DIR / "log.json"
 
 logger.add(
     JSON_LOG_FILE,

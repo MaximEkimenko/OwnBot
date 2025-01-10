@@ -1,7 +1,5 @@
 import asyncio
-import datetime
 from collections import defaultdict
-from pprint import pprint
 from typing import Sequence
 
 from db.database import connection
@@ -29,14 +27,12 @@ async def add_indicator_params_json(user_id: int, session: AsyncSession) -> bool
     try:
         with open(json_path, mode='r', encoding='utf-8') as json_indicator:
             indicator_data = json.load(json_indicator)
-            # indicator_data.update({'user_id': user_id})
 
         for line in indicator_data:
             line.update({'user_id': user_id})
 
     except Exception as e:
-        log.error("Ошибка чтения файла indicators.json.")
-        log.exception(e)
+        log.error("Ошибка чтения файла indicators.json.", exc_info=e)
         raise e
 
     try:
@@ -115,8 +111,7 @@ async def get_indicator_params(params_filter: dict, session: AsyncSession) -> Se
         result = await session.execute(query)
         params = result.scalars().all()
     except IntegrityError as e:
-        log.error('Ошибка БД при получении показателей.')
-        log.exception(e)
+        log.error('Ошибка БД при получении показателей.', exc_info=e)
         raise e
 
     return params
@@ -139,7 +134,7 @@ async def get_literal_project_dict(user_id: int) -> dict:
     return dict(result)
 
 
-async def get_project_indicator_dict(user_id: int):
+async def get_project_indicator_dict(user_id: int) -> dict:
     """Получение словаря параметров для расчёта по количеству"""
     db_data: Sequence[IndicatorParams] = await get_indicator_params(params_filter={'quantity_based_method': True,
                                                                                    'user_id': user_id})
@@ -183,5 +178,5 @@ if __name__ == '__main__':
     # asyncio.run(add_indicator_params_json())
     # print(asyncio.run(get_indicator_params(params_filter={'description_based_method': True})))
     # asyncio.run(get_literal_project_dict(user_id=1))
-    asyncio.run(get_indicator_params_id_dict(user_id=1))
+    # asyncio.run(get_indicator_params_id_dict(user_id=1))
     # print(asyncio.run(create_or_update_indicators(user_id=1, data={'cndx': 1})))

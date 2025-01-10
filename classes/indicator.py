@@ -32,16 +32,8 @@ class Indicator:
 
     # TODO
     #  Виды показателей:
-    #      - Складываемые по description одного проекта todoist_task с разделением по литералу
-    #       (признаку проекта), например:
-    #       словарь соответствия показателей литералам:
-    #       projects_keys = {'Study': {'B': 'book', 'A': 'audiobook', 'V': 'video'},
-    #                      'Wealth': {'M': 'add_income', 'P': 'poms'}}
-    #       Для todoist_task читаем проект, description, литерал; сопоставляем и складываем.
-    #       for project in projects_keys:
-    #           study_data.update(task_description_read(projects_keys=projects_keys, project=project, today=today));
-    #      - Количество выполненных задач внутри определённого проекта в течении суток;
-    #      - Операции со значениями из ячеек файлов excel, json файлов и т.д.
+    #      - Операции со значениями из ячеек файлов excel
+    #      - Операции со значениями из ключей файлов json файлов
 
     # TODO
     #  1 Метод Indicator.add_json - который добавляет параметры показателя из json файла

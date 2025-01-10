@@ -1,11 +1,14 @@
 import asyncio
 import datetime
+from collections import defaultdict
+from pprint import pprint
 
 from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.utils.chat_action import ChatActionSender
 from config import settings
-from utils.common_utils import user_auth, verify_string_as_filename, get_bot_for_schedule
+from utils.common_utils import (user_auth, verify_string_as_filename, get_bot_for_schedule,
+                                get_flat_dict, get_min_telegram_data)
 from logger_config import log
 import enums
 
@@ -155,6 +158,30 @@ async def handler_go(message: types.Message, schedule_bot=None):
     await handler_report_create(message, schedule_bot)
 
 
+@router.message(Command('remadd'))
+async def handler_remadd(message: types.Message):
+    """Команда добавления напоминания"""
+    user = await user_auth(message)
+    if user is False:
+        return
+    # получение данных telegram
+    try:
+        row_telegram_data = get_flat_dict(message)
+        log.debug("Данные telegram для пользователя {user} успешно получены", user=message.from_user.id)
+    except Exception as e:
+        log.error("Ошибка получения данных telegram для пользователя {user} сохранён упрощённый словарь.",
+                  user=message.from_user.id, exc_info=e)
+        row_telegram_data = get_min_telegram_data(message)
+    # pprint(row_telegram_data)
+    # TODO
+    # получение данных графика напоминания
+
+    # сохранение данных или обновление данных
+
+    # перезапуск setup_scheduler при изменении / добавлении настроек пользователем
+
+
+
 @router.message(Command('test'))
 async def handler_test(bot):
     now = datetime.datetime.now()
@@ -172,4 +199,3 @@ async def handler_test(bot):
 
 if __name__ == '__main__':
     pass
-    # asyncio.run(handler_test())

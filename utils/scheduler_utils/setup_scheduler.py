@@ -1,11 +1,11 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from config import settings
-from utils.scheduler_utils.scheduler_functions import send_reminder, schedule_go
+from utils.scheduler_utils.schedule_actions import schedule_send_reminder, schedule_go
 
 
 def setup_scheduler(bot):
     """Настройщик расписания"""
-    # TODO перезапуск setup_scheduler при изменении настроек пользователем
+
     scheduler = AsyncIOScheduler()
     # добавление задачи типа reminder
     # TODO получение настроек задач типа reminder из БД
@@ -29,7 +29,7 @@ def setup_scheduler(bot):
                                {"telegram_id": settings.SUPER_USER_TG_ID,
                                 "reminder_text": reminder_setting.pop("reminder_text")}
                                )
-        scheduler.add_job(send_reminder, replace_existing=True,
+        scheduler.add_job(schedule_send_reminder, replace_existing=True,
                           **reminder_setting,
                           misfire_grace_time=60,
                           kwargs=reminder_kwargs)

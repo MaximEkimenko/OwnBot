@@ -57,18 +57,17 @@ async def save_report_data(data: dict, session: AsyncSession) -> None:
     result = await session.execute(stmt)
     is_exists = result.scalar()
     if is_exists:
-        log.debug(f'Отчёт {data.get('name')} уже существует.')
+        log.debug('Отчёт {name} уже существует.', name=data.get('name'))
         return
 
     try:
         report = ReportModel(**data)
         session.add(report)
         await session.commit()
-        log.debug(f'Данные отчёта сохранены {data["name"]}.')
+        log.debug('Данные отчёта сохранены {name}.', name=data["name"])
     except Exception as e:
         await session.rollback()
-        log.error(f'Ошибка при сохранении отчёта.')
-        log.exception(e)
+        log.error(f'Ошибка при сохранении отчёта.', exc_info=e)
 
 
 # TODO delete if not used
@@ -117,5 +116,5 @@ async def save_report_data(data: dict, session: AsyncSession) -> None:
 
 if __name__ == '__main__':
     # asyncio.run(get_all_indicators_report_data(user_id=1))
-    asyncio.run(save_report_data(data={'name':1}))
+    asyncio.run(save_report_data(data={'name': 1}))
     # save_report_data

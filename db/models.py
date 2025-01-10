@@ -27,7 +27,6 @@ class Indicator(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey('usermodel.id'))
     indicator_name: Mapped[str] = mapped_column(unique=False)
     indicator_value: Mapped[int] = mapped_column(default=0)
-    # params: Mapped[dict | None] = mapped_column(JSON)
     user: Mapped[UserModel] = relationship("UserModel", back_populates="indicators")
 
     indicator_params_id: Mapped[int] = mapped_column(ForeignKey('indicatorparams.id'))
@@ -81,13 +80,12 @@ class IndicatorParams(Base):
 
 
 class ScheduleTask(Base):
-    # TODO
     """Модель задания по расписанию"""
     name: Mapped[str] = mapped_column(unique=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('usermodel.id'))
     task_type: Mapped[TaskType] = mapped_column(default=TaskType.REMINDER)
-    schedule: Mapped[str]
-    action: Mapped[str]
+    schedule_params: Mapped[dict | None] = mapped_column(JSON)  # параметры расписания
+    user_telegram_data: Mapped[dict | None] = mapped_column(JSON)  # telegram данные пользователя
 
     user: Mapped[UserModel] = relationship("UserModel", back_populates="tasks")
 

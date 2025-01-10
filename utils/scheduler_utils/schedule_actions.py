@@ -4,7 +4,7 @@ from handlers.user_commands import handler_go
 from logger_config import log
 
 
-async def send_reminder(*, bot: Bot, telegram_id: int, reminder_text: str):
+async def schedule_send_reminder(*, bot: Bot, telegram_id: int, reminder_text: str):
     """Команда напоминания по расписанию"""
     await bot.send_message(telegram_id, reminder_text)
 
@@ -24,5 +24,4 @@ async def schedule_go(bot):
     try:
         await handler_go(message, schedule_bot=bot)
     except Exception as e:
-        log.error("Ошибка в запуске handler_go.")
-        log.exception(e)
+        log.error("Ошибка в запуске handler_go.", exc_info=e)
