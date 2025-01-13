@@ -1,17 +1,23 @@
+from typing import Any
 from classes.user import User
 from aiogram import types
 from logger_config import log
 import re
 import datetime
+from own_bot_exceptions import (EmptyValueInputError,
+                                StringInputError,
+                                UserDoesNotExistError,
+                                CronWeekDayInputError,
+                                StringLengthError,
+                                IntInputError)
 
 
-async def user_auth(message: types.Message):
+async def user_auth(message: types.Message) -> User | bool:
     """Аутентификация пользователя"""
     command_name = message.text.split()[0]
     try:
         user = await User.auth(message.from_user.id)
-    # TODO
-    except ValueError:
+    except UserDoesNotExistError:
         log.warning('Попытка доступа к команде '
                     '{command_name} пользователем: '
                     '{full_name}, '
@@ -23,31 +29,28 @@ async def user_auth(message: types.Message):
     return user
 
 
-async def verify_string_as_filename(input_string: str) -> str:
+def verify_string_as_filename(input_string: str) -> str:
     """
     Асинхронно проверяет строку на возможность использования её в качестве имени файла.
     Вызывает исключение ValueError, если строка содержит недопустимые символы
     или не соответствует правилам именования файлов.
     """
     if not input_string:
-        # TODO
-        raise ValueError("Имя пользователя не может быть пустым.")
+        raise EmptyValueInputError("Значение не может быть пустым.")
 
     # Список недопустимых символов для имен файлов в разных ОС
     invalid_chars = r'[\\\\/:*?"<>|]'  # Windows запрещенные символы
 
-    # Максимальная длина имени файла в большинстве ОС
+    # Максимальная длина имени файла
     max_length = 255
 
     # Проверка недопустимых символов
     if re.search(invalid_chars, input_string):
-        # TODO
-        raise ValueError(f"Строка содержит недопустимые символы: {invalid_chars}")
+        raise StringInputError(f"Строка содержит недопустимые символы: {invalid_chars}")
 
     # Проверка длины файла
     if len(input_string) > max_length:
-        # TODO
-        raise ValueError(f"Строка слишком длинная. Максимальная длина: {max_length} символов.")
+        raise StringInputError(f"Строка слишком длинная. Максимальная длина: {max_length} символов.")
 
     # Проверка зарезервированных имен в Windows
     reserved_names = {
@@ -57,13 +60,11 @@ async def verify_string_as_filename(input_string: str) -> str:
     }
     base_name = input_string.split('.')[0].upper()  # Учитываем только базовое имя (до расширения)
     if base_name in reserved_names:
-        # TODO
-        raise ValueError(f"Строка зарезервирована в Windows: {base_name}")
+        raise StringInputError(f"Строка зарезервирована в Windows: {base_name}")
 
     # Проверка на пробелы или точки в начале и конце имени файла
     if input_string.strip() != input_string or input_string.endswith('.'):
-        # TODO
-        raise ValueError("Строка не должна начинаться или заканчиваться пробелами или точками.")
+        raise StringInputError("Строка не должна начинаться или заканчиваться пробелами или точками.")
     return input_string
 
 
@@ -109,3 +110,34 @@ def get_min_telegram_data(message: types.Message) -> dict:
             'date': message.date.timestamp(),
             'text': message.text,
             }
+
+
+def verify_integer(number: Any) -> int:
+    """Проверка входящего значения на тип integer"""
+    try:
+        return int(number)
+    except ValueError:
+        raise IntInputError(f'Неверно введено число: {number!r}.')
+
+
+def verify_string_length(input_string: str | None, str_length: int) -> str | None:
+    """
+    Вызывает исключение если строка превышает длину в str_length символов.
+    """
+    if not input_string:
+        return None
+    # Проверка длины
+    if len(input_string) > str_length:
+        raise StringLengthError(f"Текстовая строка слишком длинная. Максимальная длина: {str_length!r} символов.")
+
+    return input_string
+
+
+def verify_cron_day_of_week(day_of_week: str) -> str:
+    """Вызывает исключение если входящая строка не соответствует =числовому значению cron day_od_week"""
+    pattern = "^[0-6](-[0-6])?$"
+    if not re.match(pattern, day_of_week):
+        raise CronWeekDayInputError("Неверно введен день недели. Требуется значение от 0(понедельник) "
+                                    "до 6(воскресенье). "
+                                    "Или интервал чисел в виде 0-6.")
+    return day_of_week

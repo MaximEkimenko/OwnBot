@@ -1,6 +1,7 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from config import settings
 from utils.scheduler_utils.schedule_actions import schedule_send_reminder, schedule_go
+from apscheduler.triggers.cron import CronTrigger
 
 
 def setup_scheduler(bot):
@@ -9,6 +10,7 @@ def setup_scheduler(bot):
     scheduler = AsyncIOScheduler()
     # добавление задачи типа reminder
     # TODO получение настроек задач типа reminder из БД
+    # TODO не забыть добавить trigger:"cron" !
     reminder_settings = [
         {
             "trigger": 'cron', "day_of_week": "mon-sun", "hour": 12, "minute": 2,

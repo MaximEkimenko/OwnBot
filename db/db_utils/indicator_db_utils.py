@@ -50,6 +50,7 @@ async def add_indicator_params_json(user_id: int, session: AsyncSession) -> bool
 @connection
 async def create_or_update_indicators(user_id: int, data: dict, session: AsyncSession) -> str:
     """Заполнение показателей из словаря data"""
+    # TODO разобраться с continue либо if elif либо pattern matching
     result_string = ''
     for indicator_name, indicator_value_dict in data.items():
         indicator_params_id = indicator_value_dict['params_id']
@@ -67,7 +68,7 @@ async def create_or_update_indicators(user_id: int, data: dict, session: AsyncSe
                               f'для пользователя id={user_id} не изменилось.\n')
             log.debug(result_string)
             continue
-
+        # если нет данных - добавление
         if exist_indicator_value is None:
             indicator = Indicator(
                 date=today,
@@ -83,7 +84,7 @@ async def create_or_update_indicators(user_id: int, data: dict, session: AsyncSe
                               f'для пользователя id={user_id} добавлен.\n')
             log.debug(result_string)
             continue
-        else:
+        else:  # иначе обновление
             stmt = (
                 update(Indicator)
                 .where(Indicator.user_id == user_id,

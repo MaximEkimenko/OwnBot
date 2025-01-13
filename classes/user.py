@@ -1,17 +1,16 @@
 import asyncio
 from typing import Dict
 
+import enums
 from classes.indicator import Indicator
 from classes.report import Report
 from classes.todoist_task import TodoistTask
 from classes.schedule_task import ScheduleTask
 from classes.indicator_param import IndicatorParam
 
-from logger_config import log
 from config import settings
-from db.database import connection
 from db.db_utils import user_db_utils, todoist_task_db_utils
-
+from own_bot_exceptions import UserDoesNotExistError
 
 
 class User:
@@ -51,7 +50,7 @@ class User:
         """Авторизация пользователя по telegram_id"""
         user_data = await user_db_utils.get_user_data_by_telegram_id(telegram_id=telegram_id)
         if not user_data:
-            raise ValueError('Такого пользователя не существует.')
+            raise UserDoesNotExistError('Такого пользователя не существует.')
 
         todoist_tasks = None
         schedules = None
@@ -62,18 +61,32 @@ class User:
             todoist_token=user_data[telegram_id].get('todoist_token'),
             todoist_tasks=todoist_tasks,
             schedules=schedules,
-         )
+        )
 
-    async def reports_config(self, report_name: str | None = None,
-                             report_type: Report | None = None,
-                             content: str | None = None):
+    async def report_config(self, report_name: str | None = None,
+                            report_type: enums.ReportType | None = None,
+                            content: str | None = None):
         """ Инициализация отчёта"""
         return Report(
             user_id=self.user_id,
             name=report_name,
             report_type=report_type,
             content=content
-            )
+        )
+
+    async def schedule_config(self,
+                              name: str,
+                              task_type: enums.TaskType,
+                              schedule_params: dict,
+                              user_telegram_data: dict):
+        """ Инициализация отчёта"""
+        return ScheduleTask(
+            user_id=self.user_id,
+            name=name,
+            task_type=task_type,
+            schedule_params=schedule_params,
+            user_telegram_data=user_telegram_data
+        )
 
     def get_user_data(self) -> Dict:
         """ Логика получения данных пользователя """
@@ -107,4 +120,3 @@ if __name__ == '__main__':
     # print(_user.indicators))
 
     # print(_user.indicators)
-
