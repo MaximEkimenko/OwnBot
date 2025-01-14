@@ -1,14 +1,9 @@
-import asyncio
 from collections import defaultdict
-
 from db.db_utils import todoist_task_db_utils
 from db.db_utils.indicator_db_utils import get_literal_project_dict, create_or_update_indicators
 
 from db.models import TodoistTask
 from typing import Sequence
-
-
-# TODO logger, try-except
 
 
 async def get_description_todoist_dict(user_id: int) -> str:
@@ -31,9 +26,3 @@ async def get_description_todoist_dict(user_id: int) -> str:
 
     # Сохранение данных
     return await create_or_update_indicators(data=dict(indicators_sum_dict), user_id=user_id)
-
-    # return dict(indicators_sum_dict)
-
-
-if __name__ == '__main__':
-    asyncio.run(get_description_todoist_dict(user_id=1))

@@ -1,4 +1,3 @@
-
 full_report_css = """
             <style>
                 body {

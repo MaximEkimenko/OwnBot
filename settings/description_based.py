@@ -1,3 +1,7 @@
+# TODO
+#  NotImplemented
+#  Файл заменён indicators.json
+#  Удалить в случае не надобности
 # имена показателей
 from pathlib import Path
 from config import BaseDIR
@@ -216,5 +220,5 @@ indicator_params = [
 ]
 
 # json_path = BaseDIR / Path('settings') / 'indicators.json'
-# js = json.dumps(indicator_params, ensure_ascii=False)
-# print(js)
+# json_data = json.loads(json_path.read_text())
+# print(json_data, type(json_data))

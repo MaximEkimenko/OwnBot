@@ -1,7 +1,4 @@
-import asyncio
-import json
 from typing import List
-
 from calculate_methods.description_based import get_description_todoist_dict
 from calculate_methods.quantity_based import get_quantity_todoist_dict
 from calculate_methods.pdf_based import pdf_indicator_to_db
@@ -9,37 +6,33 @@ from classes.indicator_param import IndicatorParam
 from classes.todoist_task import TodoistTask
 from io import BytesIO
 from db.db_utils.indicator_db_utils import get_indicator_params_id_dict, create_or_update_indicators
-from pathlib import Path
-from config import BaseDIR
-from db.db_utils import indicator_db_utils
 
+
+# TODO источник предыдущей версии расчёта проект owneed_bot -
+#  - файл progress_tracker_db_write.py
+#  - функция indicators_write
+
+# TODO V1.0:
+#      - Показатель количества выполненных задач по метке начать с @Achievement.
+#        (или обойтись только формированием отчёта из таблицы БД? То есть вместо
+#        ежедневного показателя формируем только отчёт (раз в месяц по расписанию?))
+#      - Операции со значениями из ячеек файлов excel
+#      - Операции со значениями из ключей файлов json файлов
+#      - Метод Indicator.add_json - который добавляет параметры показателя из json файла,
+#        который загружает пользователь
+#      - Метод Indicator.add_params- который добавляет параметры показателя и получает данные
+#        из интерфейса (FSM?)
 
 class Indicator:
     """Показатель"""
-
     def __init__(self,
                  user_id: int,
                  name: str = None,
                  params: IndicatorParam = None):
         self.name = name
         self.params = params
-        self.todoist_data: List[TodoistTask] = []
+        self.todoist_data: List[TodoistTask] = []  # TODO NotImplemented
         self.user_id = user_id
-
-    # TODO источник предыдущей версии расчёта проект owneed_bot -
-    #  - файл progress_tracker_db_write.py
-    #  - функция indicators_write
-
-    # TODO
-    #  Виды показателей:
-    #      - Операции со значениями из ячеек файлов excel
-    #      - Операции со значениями из ключей файлов json файлов
-
-    # TODO
-    #  1 Метод Indicator.add_json - который добавляет параметры показателя из json файла
-    #  2 Метод Indicator.add_params- который добавляет параметры в получением из интерфейса (FSM для Aiogram)
-    #  3 Расчёт показателей, агрегация данных;
-    #  4 Запись в БД;
 
     async def calculate_save_indicators(self) -> tuple:
         """Выполнение расчётов показателей для записи в БД"""
@@ -70,7 +63,3 @@ class Indicator:
     async def manual_update_save_indicators(self, indicator_data):
         """Сохранение данных из команды update"""
         return await create_or_update_indicators(self.user_id, data=indicator_data)
-
-
-if __name__ == '__main__':
-    pass

@@ -9,7 +9,8 @@ from own_bot_exceptions import (EmptyValueInputError,
                                 UserDoesNotExistError,
                                 CronWeekDayInputError,
                                 StringLengthError,
-                                IntInputError)
+                                IntInputError,
+                                TwoItersLengthError)
 
 
 async def user_auth(message: types.Message) -> User | bool:
@@ -100,7 +101,7 @@ def get_flat_dict(data_object: object) -> dict:
     return raw_telegram_data
 
 
-def get_min_telegram_data(message: types.Message) -> dict:
+def get_min_telegram_data(message: types.Message, user_id: int) -> dict:
     """Получение минимального набора данных telegram"""
     return {'from_user': {'id': message.from_user.id,
                           'first_name': message.from_user.first_name,
@@ -109,6 +110,7 @@ def get_min_telegram_data(message: types.Message) -> dict:
                           },
             'date': message.date.timestamp(),
             'text': message.text,
+            'user_id': user_id,
             }
 
 
@@ -141,3 +143,19 @@ def verify_cron_day_of_week(day_of_week: str) -> str:
                                     "до 6(воскресенье). "
                                     "Или интервал чисел в виде 0-6.")
     return day_of_week
+
+
+def list_of_tuples_to_str(list_of_tuples: list[Any]) -> str:
+    """Приведение списка кортежей к строке"""
+    return '\n\n'.join(' | '.join(map(str, row)) for row in list_of_tuples)
+
+
+if __name__ == '__main__':
+    pass
+    # _data = [
+    #     ('reminder_name', 'напоминание', '0-6', 14, 0, 'текст напоминания'),
+    #     ('ghjghkg', 'напоминание', '0-6', 14, 0, 'новый текст напоминания'),
+    #     ('taskname', 'напоминание', '0-6', 19, 30, 'напоминаю тебе что-то'),
+    #     ('new_taskname', 'задача', '0-6', 23, 0, None),
+    # ]
+    # print(list_of_tuples_to_str(_data))

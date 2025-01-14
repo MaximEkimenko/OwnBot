@@ -21,7 +21,9 @@ from config import today
 async def add_indicator_params_json(user_id: int, session: AsyncSession) -> bool:
     """Заполнение параметров показателя"""
     json_path = BaseDIR / Path('settings') / 'indicators.json'
+    # TODO обработать ошибку на уровне выше, вернуть пользователю соответствующее сообщение
     if not json_path.is_file():
+        log.error("Файл indicators.json не найден по пути {json_path}.", json_path=json_path)
         raise FileNotFoundError(f"Файл indicators.json не найден по пути {json_path}.")
 
     try:
@@ -33,7 +35,6 @@ async def add_indicator_params_json(user_id: int, session: AsyncSession) -> bool
 
     except Exception as e:
         log.error("Ошибка чтения файла indicators.json.", exc_info=e)
-        raise e
 
     try:
         indicator_params = [IndicatorParams(**data) for data in indicator_data]
@@ -47,10 +48,10 @@ async def add_indicator_params_json(user_id: int, session: AsyncSession) -> bool
     return True
 
 
+# UPDATE
 @connection
 async def create_or_update_indicators(user_id: int, data: dict, session: AsyncSession) -> str:
     """Заполнение показателей из словаря data"""
-    # TODO разобраться с continue либо if elif либо pattern matching
     result_string = ''
     for indicator_name, indicator_value_dict in data.items():
         indicator_params_id = indicator_value_dict['params_id']
@@ -66,10 +67,8 @@ async def create_or_update_indicators(user_id: int, data: dict, session: AsyncSe
         if exist_indicator_value == int(indicator_value):
             result_string += (f'Значение показателя {indicator_name} = {indicator_value}, '
                               f'для пользователя id={user_id} не изменилось.\n')
-            log.debug(result_string)
-            continue
         # если нет данных - добавление
-        if exist_indicator_value is None:
+        elif exist_indicator_value is None:
             indicator = Indicator(
                 date=today,
                 user_id=user_id,
@@ -82,8 +81,6 @@ async def create_or_update_indicators(user_id: int, data: dict, session: AsyncSe
             await session.commit()
             result_string += (f'Показатель {indicator_name} = {indicator_value}, '
                               f'для пользователя id={user_id} добавлен.\n')
-            log.debug(result_string)
-            continue
         else:  # иначе обновление
             stmt = (
                 update(Indicator)
@@ -96,8 +93,7 @@ async def create_or_update_indicators(user_id: int, data: dict, session: AsyncSe
             await session.commit()
             result_string += (f'Показатель {indicator_name} = {indicator_value}, '
                               f'для пользователя id={user_id} обновлён.\n')
-            log.debug(result_string)
-            continue
+    log.debug(result_string)
     return result_string
 
 
@@ -123,9 +119,7 @@ async def get_literal_project_dict(user_id: int) -> dict:
     db_data: Sequence[IndicatorParams] = \
         await get_indicator_params(params_filter={'description_based_method': True,
                                                   'user_id': user_id})
-
     result = defaultdict(dict)
-
     for data in db_data:
         project_name = data.project_name
         description_literal = data.description_literal
@@ -150,7 +144,7 @@ async def get_project_indicator_dict(user_id: int) -> dict:
 
 
 async def get_indicator_file_params_dict(user_id: int, file_method: str) -> dict:
-    """Получение словаря параметров чтения файла"""
+    """Получение словаря параметров для расчёта при чтении файла"""
     db_data: Sequence[IndicatorParams] = await get_indicator_params(params_filter={'file_based_method': file_method,
                                                                                    'user_id': user_id})
     result = dict()
@@ -172,12 +166,3 @@ async def get_indicator_params_id_dict(session: AsyncSession, user_id: int) -> d
     indicator_params = result.scalars().all()
 
     return {indicator.indicator_name: indicator.id for indicator in indicator_params}
-
-
-if __name__ == '__main__':
-    pass
-    # asyncio.run(add_indicator_params_json())
-    # print(asyncio.run(get_indicator_params(params_filter={'description_based_method': True})))
-    # asyncio.run(get_literal_project_dict(user_id=1))
-    # asyncio.run(get_indicator_params_id_dict(user_id=1))
-    # print(asyncio.run(create_or_update_indicators(user_id=1, data={'cndx': 1})))

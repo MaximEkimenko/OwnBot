@@ -1,13 +1,12 @@
-import aiofiles
-import datetime
-
-import asyncio
-import pygal
-from db.db_utils.report_db_utils import get_all_indicators_report_data
-from pygal.style import Style
-from utils.report_utils.report_css import full_report_css
-from utils.report_utils.report_config import preferred_order, preferred_colors, date_label_freq
 import io
+import pygal
+import asyncio
+import datetime
+from pygal.style import Style
+
+from db.db_utils.report_db_utils import get_all_indicators_report_data
+from utils.report_utils.report_css import full_report_css
+from settings.report_config import preferred_order, preferred_colors, date_label_freq
 
 
 async def create_full_html_report(user_id: int,
@@ -16,12 +15,11 @@ async def create_full_html_report(user_id: int,
                                   ) -> io.BytesIO:
     """Построение отчётов"""
     indicator_data = await get_all_indicators_report_data(user_id=user_id, start=start, end=end)
-    # сортировка по предпочтениям
+    # сортировка по предпочтениям из файла report_config.py
     if preferred_order:
         indicator_data = dict(sorted(indicator_data.items(),
                                      key=lambda x:
                                      preferred_order.index(x[0]) if x[0] in preferred_order else len(preferred_order)))
-
     # формирование отчёта
     charts_list = []
     for indicator, value_dict in indicator_data.items():
@@ -57,7 +55,7 @@ async def create_full_html_report(user_id: int,
                                     show_dots=False,
                                     )
         timeline_chart.title = (f'{indicator.upper()}: {start.strftime("%d.%m.%Y")}-{end.strftime("%d.%m.%Y")} '
-                                f'(value: {current_indicator_value:.2f}, '
+                                f'(average value: {current_indicator_value:.2f}, '
                                 f'absolute: {current_absolute_value:.2f})'
                                 )
         timeline_chart.x_labels = [d.strftime('%d.%m.%y') for d in dates]
@@ -69,7 +67,7 @@ async def create_full_html_report(user_id: int,
         timeline_chart.show_minor_y_labels = True
         charts_list.append(timeline_chart.render(is_unicode=True))
 
-    # отправка байт потока
+    # формирование результата
     buffer = io.BytesIO()
     html_content = '<html><head>'
     html_content += full_report_css
@@ -79,12 +77,8 @@ async def create_full_html_report(user_id: int,
         html_content += f'<div class="chart">{chart}</div>'
     html_content += '</div></body></html>'
 
+    # отправка результата потоком
     buffer.write(html_content.encode('utf-8'))
-    buffer.seek(0)  # Возвращаем указатель в начало потока
+    buffer.seek(0)
 
     return buffer
-
-
-if __name__ == "__main__":
-    res = asyncio.run(create_full_html_report(user_id=1))
-

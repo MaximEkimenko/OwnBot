@@ -81,13 +81,18 @@ class IndicatorParams(Base):
 
 class ScheduleTask(Base):
     """Модель задания по расписанию"""
-    name: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[str] = mapped_column()
     user_id: Mapped[int] = mapped_column(ForeignKey('usermodel.id'))
     task_type: Mapped[TaskType] = mapped_column(default=TaskType.REMINDER)
     schedule_params: Mapped[dict | None] = mapped_column(JSON)  # параметры расписания
     user_telegram_data: Mapped[dict | None] = mapped_column(JSON)  # telegram данные пользователя
 
     user: Mapped[UserModel] = relationship("UserModel", back_populates="tasks")
+
+    __table_args__ = (
+        # для каждого пользователя name уникален
+        UniqueConstraint('user_id', 'name', name='uq_name_user_id'),
+    )
 
 
 class Report(Base):

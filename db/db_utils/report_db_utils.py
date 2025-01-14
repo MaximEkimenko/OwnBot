@@ -1,9 +1,7 @@
 import asyncio
 import datetime
-from pprint import pprint
 from collections import defaultdict
 
-from config import today, first_day_to_report
 from logger_config import log
 
 from db.models import Indicator, IndicatorParams
@@ -64,57 +62,7 @@ async def save_report_data(data: dict, session: AsyncSession) -> None:
         report = ReportModel(**data)
         session.add(report)
         await session.commit()
-        log.debug('Данные отчёта сохранены {name}.', name=data["name"])
+        log.debug('Данные отчёта {name} сохранены.', name=data["name"])
     except Exception as e:
         await session.rollback()
         log.error(f'Ошибка при сохранении отчёта.', exc_info=e)
-
-
-# TODO delete if not used
-# @connection
-# async def get_full_report_data(user_id,
-#                           session: AsyncSession,
-#                           start: datetime.date | None = None,
-#                           end: datetime.date | None = None,
-#                           ) -> list:
-#     """Получение данных для отчёта"""
-#     result_dict = defaultdict(dict)
-#     start_date = first_day_to_report if start is None else start
-#     end_date = today if end is None else end
-#     stmt = (
-#         select(
-#             Indicator,
-#             # Indicator.id,
-#             # Indicator.date,
-#             # Indicator.indicator_name,
-#             # Indicator.indicator_value,
-#             # IndicatorParams.calc_as_average
-#             IndicatorParams
-#         )
-#         .join(Indicator.indicator_params)
-#         .where(Indicator.user_id == user_id)
-#         .filter(Indicator.date.between(start_date, end_date))
-#     )
-#     result = await session.execute(stmt)
-#     report_data = result.mappings()
-#     # report_data = result.scalars().all()
-#
-#     for data in report_data:
-#         # pprint(data[0].to_dict())
-#         # pprint(data[1].to_dict())
-#         # result_dict[data[0].indicator_name].update({data[0].date: data[0].to_dict() })
-#                                                     # | data[0].indicator_params.to_dict()})
-#
-#
-#         # print(data[0].indicator_params.to_dict())
-#         # result_dict[data.indicator_name].update({data.date: data.to_dict()})
-#
-#     pprint(result_dict)
-#
-#     return list(report_data)
-
-
-if __name__ == '__main__':
-    # asyncio.run(get_all_indicators_report_data(user_id=1))
-    asyncio.run(save_report_data(data={'name': 1}))
-    # save_report_data

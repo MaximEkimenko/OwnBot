@@ -1,6 +1,3 @@
-import asyncio
-from pprint import pprint
-
 import enums
 from sqlalchemy import select, exists, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -50,7 +47,6 @@ async def save_reminder_data(schedule_params: dict,
     except Exception as e:
         await session.rollback()
         log.error(f'Ошибка при сохранении напоминания.', exc_info=e)
-        log.exception(e)
 
     return True
 
@@ -114,5 +110,10 @@ async def get_scheduler_params(user_id: int, session: AsyncSession):
     return [line.to_dict() for line in results]
 
 
-if __name__ == '__main__':
-    pprint(asyncio.run(get_scheduler_params(1)))
+@connection
+async def get_all_users_scheduler_params(session: AsyncSession):
+    """Получение всех запланированных задач пользовался"""
+    stmt = select(ScheduleTask)
+    result = await session.execute(stmt)
+    results = result.scalars().all()
+    return [line.to_dict() for line in results]

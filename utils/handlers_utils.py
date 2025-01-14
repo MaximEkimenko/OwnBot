@@ -8,7 +8,6 @@ from logger_config import log
 
 async def verify_schedule_params(message: types.Message, reminder_elements: list) -> dict | None:
     """"Проверка ввода данных планирования задачи"""
-    # TODO ВЫДЕЛИТЬ ОБЩУЮ ЛОГИКУ
     # проверка дней недели
     try:
         day_of_week = verify_cron_day_of_week(reminder_elements[1])
@@ -56,7 +55,7 @@ def get_telegram_data_dict(message: types.Message) -> dict:
         user_telegram_data = get_flat_dict(message)
         log.debug("Данные telegram для пользователя {user} успешно получены.", user=message.from_user.id)
     except Exception as e:
-        user_telegram_data = get_min_telegram_data(message)
+        user_telegram_data = get_min_telegram_data(message, user_id=message.from_user.id)
         log.error("Ошибка получения данных telegram для пользователя {user} сохранён упрощённый словарь.",
                   user=message.from_user.id, exc_info=e)
 

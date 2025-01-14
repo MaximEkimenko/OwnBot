@@ -1,5 +1,3 @@
-import asyncio
-
 from db.db_utils import indicator_db_utils
 
 
@@ -27,18 +25,13 @@ class IndicatorParam:
         return await indicator_db_utils.add_indicator_params_json(self.user_id)
 
     async def add_param(self):
-        # TODO
+        # TODO метод добавление параметра пользователем и вызовом через интерфейс через интерфейс
         """Добавление параметра"""
-
-    async def delete_param(self):
-        # TODO
-        """Удаление параметров"""
 
     async def update_param(self):
         # TODO
         """Обновление параметров"""
 
-
-if __name__ == '__main__':
-    pass
-
+    async def delete_param(self):
+        # TODO
+        """Удаление параметров"""

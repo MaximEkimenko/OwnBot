@@ -10,6 +10,7 @@ from classes.indicator_param import IndicatorParam
 
 from config import settings
 from db.db_utils import user_db_utils, todoist_task_db_utils
+from db.db_utils.scheduler_db_utils import get_scheduler_params, is_schedule_exists
 from own_bot_exceptions import UserDoesNotExistError
 
 
@@ -35,6 +36,7 @@ class User:
 
     async def add_todoist_token(self, todoist_token: str) -> bool:
         """Добавление токена todoist - включение функционал учёта todoist"""
+        # TODO добавить команду в интерфейсе
         await todoist_task_db_utils.save_todoist_tasks(todoist_token=todoist_token, user_id=self.user_id)
         return await user_db_utils.add_user_todoist_token(todoist_token=todoist_token, user_id=self.user_id)
 
@@ -76,10 +78,10 @@ class User:
 
     async def schedule_config(self,
                               name: str,
-                              task_type: enums.TaskType,
-                              schedule_params: dict,
-                              user_telegram_data: dict):
-        """ Инициализация отчёта"""
+                              task_type: enums.TaskType = None,
+                              schedule_params: dict = None,
+                              user_telegram_data: dict = None):
+        """ Инициализация задачи по расписанию"""
         return ScheduleTask(
             user_id=self.user_id,
             name=name,
@@ -88,35 +90,18 @@ class User:
             user_telegram_data=user_telegram_data
         )
 
-    def get_user_data(self) -> Dict:
-        """ Логика получения данных пользователя """
+    async def check_schedule_exists(self, task_name):
+        """Проверка существования задачи по расписанию"""
+        return await is_schedule_exists(task_name, user_id=self.user_id)
 
-    def indicators_config(self):
-        """Логика настройки индикаторов"""
-        pass
-
-    def plan_tasks(self):
-        """Логика планирования задач"""
-        pass
-
-
-if __name__ == '__main__':
-    # регистрация пользователя
-    # asyncio.run(User.register(telegram_id=settings.SUPER_USER_TG_ID))
-    # аутентификация пользователя
-    _user = asyncio.run(User.auth(settings.SUPER_USER_TG_ID))
-    # _user = asyncio.run(User.auth(123))
-    # добавление todoist_token, обновление todoist_task
-    # asyncio.run(_user.add_todoist_token(todoist_token=settings.TODOIST_TOKEN))
-    # добавление новых todoist_task
-    # asyncio.run(_user.save_todoist_data())
-    # добавление параметров из json
-    # asyncio.run(_user.indicator_params.add_params_json())
-    # расчёт показателей
-    # print(asyncio.run(_user.indicators.verificate_indicators(indicators_to_update={'sdgsdg': 123, 'cndx': 11})))
-    # print(asyncio.run(_user.indicators.verificate_indicators(indicators_to_update={'steps': 123, 'cndx': 11})))
-    #
-    # print(asyncio.run(_user.indicators.verificate_indicators(indicators_to_update={'kcals': 123, 'cndx': 11})))
-    # print(_user.indicators))
-
-    # print(_user.indicators)
+    async def get_all_tasks(self):
+        """Получение всех задач"""
+        tasks = await get_scheduler_params(user_id=self.user_id)
+        return [(line["name"],
+                 line["task_type"],
+                 line["schedule_params"]["day_of_week"],
+                 line["schedule_params"]["hour"],
+                 line["schedule_params"]["minute"],
+                 line["schedule_params"]["text"],
+                 )
+                for line in tasks]

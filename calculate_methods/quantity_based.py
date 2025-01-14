@@ -1,12 +1,6 @@
-import asyncio
 from collections import defaultdict
-from pprint import pprint
-
 from db.db_utils.indicator_db_utils import get_project_indicator_dict, create_or_update_indicators
 from db.db_utils.todoist_task_db_utils import get_quantity_todoist_task
-
-
-# TODO logger, try-except
 
 
 async def get_quantity_todoist_dict(user_id: int) -> str:
@@ -23,9 +17,3 @@ async def get_quantity_todoist_dict(user_id: int) -> str:
         quantity_todoist_dict[indicator_name]['params_id'] = params_id
 
     return await create_or_update_indicators(data=dict(quantity_todoist_dict), user_id=user_id)
-
-    # return dict(quantity_todoist_dict)
-
-
-if __name__ == '__main__':
-    asyncio.run(get_quantity_todoist_dict(user_id=1))

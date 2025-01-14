@@ -1,3 +1,5 @@
+# TODO пример получения данных по todoist api другим способом
+#  удалить если нет надобности
 # api = TodoistAPI(token)  # объект TODOISTa
 # projects = api.get_projects()
 

@@ -34,26 +34,21 @@ async def handler_ind(message: types.Message, schedule_bot=None):
     user = await user_auth(message)
     if user is False:
         return
-
     # проверка задачи по расписанию
     bot = get_bot_for_schedule(message, schedule_bot)
     user_id = message.from_user.id
 
-    # await message.answer(text='Начало обработки данных...')
     await bot.send_message(chat_id=user_id, text='Начало обработки данных...')
     # выгрузка todoist
     todoist_result = await user.save_todoist_data()
     if todoist_result:
-        # await message.answer(text=todoist_result)
         await bot.send_message(chat_id=user_id, text=todoist_result)
     # расчёт показателей и сохранение в БД
     db_result = await user.indicators.calculate_save_indicators()
     if db_result[0]:
-        # await message.answer(text=db_result[0])
         await bot.send_message(chat_id=user_id, text=db_result[0])
 
     if db_result[1]:
-        # await message.answer(text=db_result[1])
         await bot.send_message(chat_id=user_id, text=db_result[1])
 
 
@@ -69,23 +64,21 @@ async def handler_report_create(message: types.Message, schedule_bot=None):
     user_id = message.from_user.id
 
     message_data = message.text.split(' ', 2)
-    # валидация имени отчёта и типа отчёта # TODO выделить в функцию
+    # валидация имени отчёта и типа отчёта # TODO выделить в функцию в handler_utils
     try:
         report_name = verify_string_as_filename(message_data[1].strip())
     except IndexError:
         report_name = None  # имя отчёта по умолчанию определяется в классе Report
-        await bot.send_message(chat_id=user_id, text='Имя отчёта по умолчанию.')
     except StringInputError as e:
         await message.answer(text=f"Неверно введёно имя отчёта. {e.args[0]}")
         log.warning("Неверно введёно имя отчёта.  {errors}", errors={e.args[0]})
         return
     try:
         report_type = verify_string_as_filename(message_data[2].strip())
-        await bot.send_message(chat_id=user_id, text=f'Тип отчёта {report_type!r}.')
+        await bot.send_message(chat_id=user_id, text=f'Тип отчёта: {report_type!r}:')
     except IndexError:
         report_type = enums.ReportType.FULL.value  # тип отчёта по умолчанию
-        await bot.send_message(chat_id=user_id, text=f'Тип отчёта по '
-                                                     f'умолчанию: {enums.ReportType.FULL.value!r}.')
+        await bot.send_message(chat_id=user_id, text=f'Тип отчёта: {enums.ReportType.FULL.value!r}:')
     except StringInputError as e:
         await message.answer(text=f"Неверно введён тип отчёта. {e.args[0]}")
         log.warning("Неверно введён тип отчёта. {errors}", errors={e.args[0]})
@@ -169,22 +162,3 @@ async def handler_go(message: types.Message, schedule_bot=None):
     await handler_ind(message, schedule_bot)
     # генерация и отправка отчёта
     await handler_report_create(message, schedule_bot)
-
-
-# @router.message(Command('test'))
-# async def handler_test(bot):
-#     now = datetime.datetime.now()
-#     user = types.User(id=settings.SUPER_USER_TG_ID, first_name='username',
-#                       last_name='', is_bot=False)
-#     chat = types.Chat(id=settings.SUPER_USER_TG_ID, type='')
-#     message = types.Message(from_user=user, chat=chat,
-#                             date=now, message_id=1234, text='/go', bot=bot)
-#
-#     try:
-#         await handler_ind(message)
-#     except Exception as e:
-#         log.exception(e)
-
-
-if __name__ == '__main__':
-    pass

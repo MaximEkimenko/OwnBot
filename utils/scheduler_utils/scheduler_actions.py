@@ -1,20 +1,18 @@
 from aiogram import Bot, types
-from config import settings
 from handlers.user_commands import handler_go
 from logger_config import log
 
 
-async def schedule_send_reminder(*, bot: Bot, telegram_id: int, reminder_text: str):
-    """Команда напоминания по расписанию"""
+async def schedule_send_reminder(*, bot: Bot, telegram_id: int, reminder_text: str) -> None:
+    """Функция создания напоминания по расписанию"""
     await bot.send_message(telegram_id, reminder_text)
 
 
-async def schedule_go(bot):
-    """Запуск выгрузки с отчётом по расписанию"""
-    # TODO заполнить из БД по данным telegram пользователя
-    user = types.User(id=settings.SUPER_USER_TG_ID, first_name='username',
+async def schedule_go(bot: Bot, telegram_id: int, **kwargs) -> None:
+    """Функция создания выгрузки с отчётом по расписанию"""
+    user = types.User(id=telegram_id, first_name='username',
                       is_bot=False)
-    chat = types.Chat(id=settings.SUPER_USER_TG_ID, type='private')
+    chat = types.Chat(id=telegram_id, type='private')
     message = types.Message.model_construct(from_user=user,
                                             chat=chat,
                                             date=0,

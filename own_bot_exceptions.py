@@ -20,3 +20,11 @@ class CronWeekDayInputError(ValueError):
 
 class StringLengthError(ValueError):
     """"Исключение для превышения длины строки"""
+
+
+class TwoItersLengthError(Exception):
+    """Исключение для сравнения длины двух Iterable"""
+
+
+class SameTokenError(Exception):
+    """Исключение при обновлении токена без изменений"""

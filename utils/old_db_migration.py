@@ -1,3 +1,4 @@
+"""Скрипт для переноса данных со старой версии БД на новую"""
 import asyncio
 import sqlite3
 from config import BaseDIR
@@ -14,10 +15,7 @@ DB_PATH = BaseDIR / Path('progress_tracker.db')
 
 
 class Database:
-    """
-    Взаимодействие с БД sqlite3
-    """
-
+    """Взаимодействие с старой версией БД progress_tracker"""
     def __init__(self, db_name):
         self.db_name = db_name
         self.connection = None

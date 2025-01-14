@@ -1,19 +1,16 @@
+import asyncio
 from typing import Any
-
+from own_bot_exceptions import SameTokenError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
+from sqlalchemy.orm import joinedload
 
 from db.database import connection
 from db.models import UserModel
 
 from config import settings
-
 from logger_config import log
-import asyncio
-
-from sqlalchemy.orm import joinedload
-from pprint import pprint
 
 
 def joined_to_dict(user_model, user_dict: dict, joined_models: list) -> dict:
@@ -45,7 +42,7 @@ async def add_user_todoist_token(*, todoist_token: str, user_id: int, session: A
     token = result.scalar_one_or_none()
 
     if token == todoist_token:
-        raise ValueError('Такой todoist token уже ведён. Введите новый.')
+        raise SameTokenError('Такой todoist token уже ведён. Введите новый.')
 
     query = update(UserModel).values(todoist_token=todoist_token)
     await session.execute(query)
@@ -56,11 +53,8 @@ async def add_user_todoist_token(*, todoist_token: str, user_id: int, session: A
 @connection
 async def get_user_data_by_telegram_id(*, telegram_id: int, session: AsyncSession) -> dict[str | int, Any] | None:
     """Получение записи пользователя по telegram_id"""
-
     query = (select(UserModel).where(UserModel.telegram_id == telegram_id)
-             # .options(joinedload(UserModel.todoist_tasks))
              .options(joinedload(UserModel.tasks))
-             # .options(joinedload(UserModel.indicators))
              .options(joinedload(UserModel.reports))
              )
     result = await session.execute(query)
@@ -79,7 +73,4 @@ async def get_user_data_by_telegram_id(*, telegram_id: int, session: AsyncSessio
     return user_data
 
 if __name__ == '__main__':
-    # asyncio.run(create_user(telegram_id=settings.SUPER_USER_TG_ID))
-    # asyncio.run(add_user_todoist_token(todoist_token='48cbdb22977eb9d84368aef673d3c7ba7c0f311a', user_id=1))
-    pprint(asyncio.run(get_user_data_by_telegram_id(telegram_id=settings.SUPER_USER_TG_ID)))
     pass

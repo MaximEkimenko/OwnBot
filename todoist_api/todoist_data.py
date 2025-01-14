@@ -10,15 +10,10 @@ from todoist_api_python.api_async import TodoistAPIAsync
 from logger_config import log
 
 
-# TODO обойти ограничение в 30 выполненных задач за последние сутки:
-#  делать выгрузку на фоне по сигналу при выполнении (отправке команды?).
-#  Или по расписанию несколько раз в день (каждый час?).
-
-
 async def get_todoist_data(token: str) -> list[dict[str: Any | None]]:
     try:
         """
-        Полк учение данных API Todoist. 
+        Получение данных API Todoist. 
         Для получения выполненных задач используется SYNC API. REST API не умеет работать с 
         is_recurring=True задачами. Ограничение SYNC API - 30 задач за последние сутки.
         Функция возвращает кортеж из выполненных задач за ТЕКУЩИЙ ДЕНЬ в виде словаря с ключами:
@@ -41,10 +36,7 @@ async def get_todoist_data(token: str) -> list[dict[str: Any | None]]:
         competed_tasks = []
         # детали задач
         for task_data in tasks:
-            # TODO проблема с is_recurring task они обновляются постоянно, даже когда не выполнены. т.к.
-            #  task_id не меняется.
             api_task = await api.get_task(task_id=task_data['task_id'])
-            # pprint(api_task)
             task = {
                 'task': api_task.content,
                 'project': projects[api_task.project_id],
@@ -55,15 +47,13 @@ async def get_todoist_data(token: str) -> list[dict[str: Any | None]]:
                 'description': api_task.description,
                 'completed_at': parse(task_data['completed_at'], ignoretz=True) + timedelta(hours=TIME_ZONE),
                 'added_at': parse(api_task.created_at, ignoretz=True) + timedelta(hours=TIME_ZONE),
-
                 'priority': api_task.priority,
             }
             competed_tasks.append(task.copy())
         return competed_tasks
 
     except Exception as e:
-        log.error('Ошибка в получении выполненных задач от todoist.')
-        log.exception(e)
+        log.error('Ошибка в получении выполненных задач от todoist.', exc_info=e)
 
 
 if __name__ == '__main__':

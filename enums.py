@@ -10,6 +10,9 @@ class TaskType(str, enum.Enum):
     REMINDER = 'напоминание'
     TASK = 'задача'
 
+    def __str__(self):
+        return self.value
+
 
 class ReportType(str, enum.Enum):
     """Типы отчетов."""
@@ -23,3 +26,4 @@ class FileBasedMethods(str, enum.Enum):
     PDF = 'pdf'
     XLSX = 'xlsx'
 
+# print(TaskType)
