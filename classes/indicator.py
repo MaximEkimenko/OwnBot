@@ -25,13 +25,14 @@ from db.db_utils.indicator_db_utils import get_indicator_params_id_dict, create_
 
 class Indicator:
     """Показатель"""
+    __slots__ = ("name", "params", "user_id")
+
     def __init__(self,
                  user_id: int,
                  name: str = None,
                  params: IndicatorParam = None):
         self.name = name
         self.params = params
-        self.todoist_data: List[TodoistTask] = []  # TODO NotImplemented
         self.user_id = user_id
 
     async def calculate_save_indicators(self) -> tuple:

@@ -1,67 +1,66 @@
 from aiogram import Router, types
 from aiogram.filters import Command
-from utils.common_utils import (user_auth,
-                                verify_string_as_filename,
+from utils.common_utils import (verify_string_as_filename,
                                 verify_string_length,
-                                list_of_tuples_to_str)
+                                list_of_tuples_to_str, get_telegram_data_dict)
+from utils.handlers_utils import user_auth
 from logger_config import log
-import enums
 from own_bot_exceptions import StringInputError, StringLengthError
-from utils.handlers_utils import verify_schedule_params, get_telegram_data_dict
+from utils.scheduler_utils.scheduler_params import verify_input_create_scheduler_params
 from utils.scheduler_utils.scheduler_tasks_managment import add_or_update_scheduler_task, delete_scheduler_task
-
 
 router = Router(name=__name__)
 
 # TODO
-#  Сейчас при выполнении команды /taskadd использованием напоминания создастся задача напоминание
-#  TaskType.REMINDER, а без неё задача TaskType.TASK,  причём только на schedule_go, которая реализует
-#  handler_go. То есть функция, которая реализует планируемую задачу зависит от типа задачи, который
-#  зависит от наличия текста напоминания. Необходимо изменить эту логику и сделать зависимость выбора
-#  функции которая реализует задачу по расписанию от параметра выдающегося пользователем
-#  - Добавить хендлеров (ручных команд пользователя), которые обрабатывают другие задачи;
-#  - Добавить в schedule_go список этих хендлеров;
-#  - Дать пользователю параметр, который выбирает нужный хендлер для планирования в расписание из
-#    schedule_go;
+#  Добавить стратегии выбора выдов ежедневного отчёта в verify_input_create_scheduler_params в зависимости
+#  от task_param при task_type = REPORT
 #  Допустимо оставить текущую логику по умолчанию (если пользователь не передал специальный параметр).
 
 
 @router.message(Command('taskadd'))
 async def handler_taskadd(message: types.Message):
-    """Команда добавления задачи"""
+    """Команда добавления / обновления задачи"""
     user = await user_auth(message)
     if user is False:
         return
+    is_update = False
     user_telegram_id = message.from_user.id
-    reminder_elements = message.text.split(maxsplit=5)[1:]  # строка параметров cron
+    task_elements = message.text.split(maxsplit=6)[1:]  # строка параметров пользователя
+    if len(task_elements) != 6:
+        await message.answer(text="Неверно введена команда /taskadd. Смотри /help.")
+        log.warning("Несоответствие параметрам при команден /taskadd {text} "
+                    "пользователем id={user}.", text=message.text, user=user.user_id
+                    )
+        return
+
     # проверка имени задачи
     try:
-        task_name = verify_string_as_filename(reminder_elements[0])
+        task_name = verify_string_as_filename(task_elements[0])
     except StringInputError as e:
         await message.answer(text=f"Неверно введено имя задачи. {e.args[0]}")
         log.warning("Ввод неверного имени задачи для показателя. {errors}", errors=e.args[0])
         return
     # проверка существующей задачи
     if await user.check_schedule_exists(task_name=task_name):
-        await message.answer(text=f"Задача {task_name!r} уже существует. "
-                                  f"Воспользуйтесь командой /remuapd.")
-        log.warning("Ввод существующей задачи {task} для добавления пользователем {user}",
-                    user=user_telegram_id,
-                    task=task_name)
-        return
-    # получение и проверка данных графика задач
-    schedule_params = await verify_schedule_params(message, reminder_elements)
+        is_update = True
+        await message.answer(text=f"Задача {task_name!r} уже существует. Задача будет обновлена.")
+        log.info("Обновление существующей задачи {task} пользователем {user}",
+                 user=user_telegram_id,
+                 task=task_name)
+        # return
+
+    # получение и проверка данных графика задач с учётом типа задачи
+    schedule_params = await verify_input_create_scheduler_params(message, task_elements)
     if not schedule_params:
         return
+
     schedule_params.update({"id": task_name})
     # получение данных telegram
     user_telegram_data = get_telegram_data_dict(message)
-    # обновление типа на напоминание если есть текст задачи
-    # TODO
-    task_type = enums.TaskType.REMINDER if schedule_params["text"] else enums.TaskType.TASK
+
     reminder = await user.schedule_config(
         name=task_name,
-        task_type=task_type,
+        task_type=schedule_params["task_type"],
         schedule_params=schedule_params,
         user_telegram_data=user_telegram_data
     )
@@ -69,11 +68,17 @@ async def handler_taskadd(message: types.Message):
         # добавление задачи в планировщик
         add_or_update_scheduler_task(schedule_params=schedule_params,
                                      user_id=user.user_id,
-                                     telegram_id=message.from_user.id,
-                                     bot=message.bot,
-                                     task_type=task_type)
+                                     # telegram_id=message.from_user.id,
+                                     # bot=message.bot,
+                                     # task_type=schedule_params["task_type"]
+                                     )
         # сохранение задачи в БД
-        await reminder.create_reminder()
+        if schedule_params["task_kwargs"].get("bot"):
+            schedule_params["task_kwargs"].pop("bot")  # удаление экземпляра бота перед записью в БД
+        if is_update:
+            await reminder.update_reminder()
+        else:
+            await reminder.create_reminder()
         await message.answer(text=f"Задача {task_name!r} успешно добавлена.")
         log.info("Задача {task} для пользователя {user} добавлена в БД успешно.",
                  task=task_name,
@@ -83,64 +88,7 @@ async def handler_taskadd(message: types.Message):
         log.error("Ошибка добавления {task} для пользователя {user}.",
                   task=task_name,
                   user=user_telegram_id, exc_info=e)
-
-
-@router.message(Command('taskupd'))
-async def taskupd(message: types.Message):
-    """Команда обновления задачи"""
-    user = await user_auth(message)
-    if user is False:
-        return
-    user_telegram_id = message.from_user.id
-    reminder_elements = message.text.split(maxsplit=5)[1:]  # строка параметров cron
-    # проверка имени задачи
-    try:
-        task_name = verify_string_as_filename(reminder_elements[0])
-    except StringInputError as e:
-        await message.answer(text=f"Неверно введено имя задачи. {e.args[0]}")
-        log.warning("Ввод неверного имени задачи. {errors}", errors=e.args[0])
-        return
-    # проверка существующей задачи
-    if not await user.check_schedule_exists(task_name=task_name):
-        await message.answer(text=f"Задача {task_name!r} не существует. "
-                                  f"Воспользуйтесь командой /remadd.")
-        log.warning("Ввод не существующей задачи {task} для обновления пользователем {user}",
-                    user=user_telegram_id,
-                    task=task_name)
-        return
-    # получение и проверка данных графика задач
-    schedule_params = await verify_schedule_params(message, reminder_elements)
-    if not schedule_params:
-        return
-    schedule_params.update({"id": task_name})
-    # получение данных telegram
-    user_telegram_data = get_telegram_data_dict(message)
-    # обновление типа на напоминание если есть текст задачи
-    task_type = enums.TaskType.REMINDER if schedule_params["text"] else enums.TaskType.TASK
-    reminder = await user.schedule_config(
-        name=task_name,
-        task_type=enums.TaskType.REMINDER,
-        schedule_params=schedule_params,
-        user_telegram_data=user_telegram_data
-    )
-    try:
-        # добавление задачи в планировщик
-        add_or_update_scheduler_task(schedule_params=schedule_params,
-                                     user_id=user.user_id,
-                                     telegram_id=message.from_user.id,
-                                     bot=message.bot,
-                                     task_type=task_type)
-        # сохранение в БД
-        await reminder.update_reminder()
-        await message.answer(text=f"Задача {task_name!r} успешно обновлена в БД.")
-        log.info("Задача {task} для пользователя {user} обновлена успешно.",
-                 task=task_name,
-                 user=user_telegram_id)
-    except Exception as e:
-        await message.answer(text=f"Задача {task_name!r} не обновлена из-за ошибки. Попробуйте позже.")
-        log.error("Ошибка обновления {task} для пользователя {user}.",
-                  task=task_name,
-                  user=user_telegram_id, exc_info=e)
+        log.exception(e)
 
 
 @router.message(Command('taskdel'))
@@ -168,7 +116,7 @@ async def taskdel(message: types.Message):
     # удаление задачи
     reminder = await user.schedule_config(
         name=task_name
-      )
+    )
     try:
         delete_scheduler_task(task_name=task_name, user_id=user.user_id)
         await reminder.delete_reminder()

@@ -4,10 +4,10 @@ from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.utils.chat_action import ChatActionSender
 from config import settings
-from utils.common_utils import (user_auth,
-                                verify_string_as_filename,
+from utils.common_utils import (verify_string_as_filename,
                                 get_bot_for_schedule,
                                 )
+from utils.handlers_utils import user_auth
 from logger_config import log
 import enums
 

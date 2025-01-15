@@ -3,6 +3,7 @@ from sqlalchemy import select, exists, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from db.database import connection
 from db.models import ScheduleTask
+from utils.common_utils import get_flat_dict
 
 from logger_config import log
 
@@ -32,7 +33,6 @@ async def save_reminder_data(schedule_params: dict,
     if is_exists:
         log.debug("Напоминание {name} уже существует.", name=schedule_name)
         return False
-
     try:
         data = {'schedule_params': schedule_params,
                 "user_telegram_data": user_telegram_data,
@@ -47,6 +47,7 @@ async def save_reminder_data(schedule_params: dict,
     except Exception as e:
         await session.rollback()
         log.error(f'Ошибка при сохранении напоминания.', exc_info=e)
+        log.exception(e)
 
     return True
 

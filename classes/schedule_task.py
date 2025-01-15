@@ -3,6 +3,9 @@ from enums import TaskType
 
 
 class ScheduleTask:
+    """Задача по расписанию"""
+    __slots__ = ("name", "user_id", "task_type", "schedule_params", "user_telegram_data")
+
     def __init__(self, name: str,
                  user_id: int,
                  task_type: TaskType,

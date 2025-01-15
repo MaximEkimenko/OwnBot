@@ -15,6 +15,10 @@ from own_bot_exceptions import UserDoesNotExistError
 
 
 class User:
+    """Пользователь"""
+    __slots__ = ("telegram_id", "todoist_token", "user_id", "todoist_tasks", "schedules",
+                 "indicators", "indicator_params")
+
     def __init__(self, telegram_id: int,
                  todoist_token: str | None = None,
                  user_id: int | None = None,
@@ -102,6 +106,6 @@ class User:
                  line["schedule_params"]["day_of_week"],
                  line["schedule_params"]["hour"],
                  line["schedule_params"]["minute"],
-                 line["schedule_params"]["text"],
+                 line["schedule_params"]["task_kwargs"],
                  )
                 for line in tasks]

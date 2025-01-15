@@ -1,25 +1,32 @@
-from utils.scheduler_utils.scheduler_manager import scheduler
-from utils.scheduler_utils.scheduler_actions import schedule_send_reminder, schedule_go
 from aiogram import Bot
 import enums
+
+from utils.scheduler_utils.scheduler_manager import scheduler
+from utils.scheduler_utils.scheduler_actions import schedule_send_reminder, schedule_every_day_report, schedule_send_mail
+
+from own_bot_exceptions import UnknownTaskTypeError
+
 from logger_config import log
 
 
-def add_or_update_scheduler_task(schedule_params: dict, user_id: int, telegram_id: int, task_type: enums.TaskType, bot: Bot):
+def add_or_update_scheduler_task(schedule_params: dict, user_id: int):
     """Добавление / обновление задачи по расписанию при изменении, добавлении данных задачи пользователем"""
+
+    # словарь стратегий планирования в зависимости от типа задачи
+    task_type = schedule_params["task_type"]
+    task_kwargs = schedule_params["task_kwargs"]
+    actions = {
+        task_type.REPORT: schedule_every_day_report,
+        task_type.REMINDER: schedule_send_reminder,
+        task_type.EMAIL: schedule_send_mail,
+    }
+
+    # добавление задачи
     task_id = schedule_params["id"] + str(user_id)
     # удаление существующей задачи
     job = scheduler.get_job(task_id)
     if job:
         scheduler.remove_job(task_id)
-
-    # словарь функций выполняющих задачи
-    actions = {task_type.TASK: schedule_go,
-               task_type.REMINDER: schedule_send_reminder}
-
-    kwargs = {"telegram_id": telegram_id,
-              "reminder_text": schedule_params.get("text"),
-              "bot": bot}
 
     scheduler.add_job(
         actions[task_type],
@@ -29,7 +36,7 @@ def add_or_update_scheduler_task(schedule_params: dict, user_id: int, telegram_i
         minute=schedule_params["minute"],
         id=task_id,
         misfire_grace_time=60,
-        kwargs=kwargs
+        kwargs=task_kwargs
     )
     log.info("Задача:{task_id} запланирована успешно для пользователя:{user}, "
              "тип:{task_type}.",

@@ -12,11 +12,13 @@ from utils.scheduler_utils.setup_scheduler import setup_scheduler
 
 
 # TODO
+#  refactor scheduler_params
 #  migrate from old version on the phone
 #   добавить показатель cash (обновляться его через update аналогично kcals, steps)
 #   обновление таблицы indicator_params с учётом cash indicator
 #   заполнение данных из старой таблицы
 #   создание requirements.txt
+#   clean the logs
 #   копирование на устройство установка окружения и зависимостей
 
 # TODO V1.0:

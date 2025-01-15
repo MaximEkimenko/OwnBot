@@ -3,6 +3,9 @@ from db.db_utils import indicator_db_utils
 
 class IndicatorParam:
     """Параметры для расчёта показателя"""
+    __slots__ = ("indicator_name", "project_name", "label_track_name", "label_calc_name",
+                 "track_by_name", "track_by_project", "calc_as_average", "user_id")
+
     def __init__(self, user_id: int,
                  indicator_name: str | None = None,
                  project_name: str | None = None,

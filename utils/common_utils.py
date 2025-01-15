@@ -1,33 +1,13 @@
 from typing import Any
-from classes.user import User
 from aiogram import types
 from logger_config import log
 import re
 import datetime
 from own_bot_exceptions import (EmptyValueInputError,
                                 StringInputError,
-                                UserDoesNotExistError,
                                 CronWeekDayInputError,
                                 StringLengthError,
-                                IntInputError,
-                                TwoItersLengthError)
-
-
-async def user_auth(message: types.Message) -> User | bool:
-    """Аутентификация пользователя"""
-    command_name = message.text.split()[0]
-    try:
-        user = await User.auth(message.from_user.id)
-    except UserDoesNotExistError:
-        log.warning('Попытка доступа к команде '
-                    '{command_name} пользователем: '
-                    '{full_name}, '
-                    'telegram_id={id}.',
-                    command_name=command_name,
-                    full_name=message.from_user.full_name,
-                    id=message.from_user.id)
-        return False
-    return user
+                                IntInputError)
 
 
 def verify_string_as_filename(input_string: str) -> str:
@@ -76,44 +56,6 @@ def get_bot_for_schedule(message: types.Message, schedule_bot):
     return message.bot
 
 
-def get_flat_dict(data_object: object) -> dict:
-    """"Получение плоского словаря атрибутов объекта"""
-    raw_telegram_data = {}
-
-    for key, val in data_object.__dict__.items():
-        if hasattr(val, "__dict__"):  # атрибут объект
-            raw_telegram_data[key] = val.__dict__
-
-        elif isinstance(val, list):  # список
-            for index, item in enumerate(val, start=1):
-                if hasattr(item, "__dict__"):  # внутри списка объект
-                    raw_telegram_data[f"{key}_{index}"] = item.__dict__
-                elif isinstance(item, dict):  # внутри списка словарь
-                    raw_telegram_data[f"{key}_{index}"] = item
-                else:
-                    raw_telegram_data[f"{key}_{index}"] = item
-
-        elif isinstance(val, datetime.datetime):  # если атрибут дата
-            raw_telegram_data[key] = val.timestamp()
-
-        else:
-            raw_telegram_data[key] = val
-    return raw_telegram_data
-
-
-def get_min_telegram_data(message: types.Message, user_id: int) -> dict:
-    """Получение минимального набора данных telegram"""
-    return {'from_user': {'id': message.from_user.id,
-                          'first_name': message.from_user.first_name,
-                          'last_name': message.from_user.last_name,
-                          'username': message.from_user.username,
-                          },
-            'date': message.date.timestamp(),
-            'text': message.text,
-            'user_id': user_id,
-            }
-
-
 def verify_integer(number: Any) -> int:
     """Проверка входящего значения на тип integer"""
     try:
@@ -150,12 +92,52 @@ def list_of_tuples_to_str(list_of_tuples: list[Any]) -> str:
     return '\n\n'.join(' | '.join(map(str, row)) for row in list_of_tuples)
 
 
-if __name__ == '__main__':
-    pass
-    # _data = [
-    #     ('reminder_name', 'напоминание', '0-6', 14, 0, 'текст напоминания'),
-    #     ('ghjghkg', 'напоминание', '0-6', 14, 0, 'новый текст напоминания'),
-    #     ('taskname', 'напоминание', '0-6', 19, 30, 'напоминаю тебе что-то'),
-    #     ('new_taskname', 'задача', '0-6', 23, 0, None),
-    # ]
-    # print(list_of_tuples_to_str(_data))
+def get_telegram_data_dict(message: types.Message) -> dict:
+    """ Получение данных telegram """
+    try:
+        user_telegram_data = get_flat_dict(message)
+        log.debug("Данные telegram для пользователя {user} успешно получены.", user=message.from_user.id)
+    except Exception as e:
+        user_telegram_data = get_min_telegram_data(message, user_id=message.from_user.id)
+        log.error("Ошибка получения данных telegram для пользователя {user} сохранён упрощённый словарь.",
+                  user=message.from_user.id, exc_info=e)
+
+    return user_telegram_data
+
+
+def get_flat_dict(data_object: object) -> dict:
+    """"Получение плоского словаря атрибутов объекта"""
+    raw_data = {}
+
+    for key, val in data_object.__dict__.items():
+        if hasattr(val, "__dict__"):  # атрибут объект
+            raw_data[key] = val.__dict__
+
+        elif isinstance(val, list):  # список
+            for index, item in enumerate(val, start=1):
+                if hasattr(item, "__dict__"):  # внутри списка объект
+                    raw_data[f"{key}_{index}"] = item.__dict__
+                elif isinstance(item, dict):  # внутри списка словарь
+                    raw_data[f"{key}_{index}"] = item
+                else:
+                    raw_data[f"{key}_{index}"] = item
+
+        elif isinstance(val, datetime.datetime):  # если атрибут дата
+            raw_data[key] = val.timestamp()
+
+        else:
+            raw_data[key] = val
+    return raw_data
+
+
+def get_min_telegram_data(message: types.Message, user_id: int) -> dict:
+    """Получение минимального набора данных telegram"""
+    return {'from_user': {'id': message.from_user.id,
+                          'first_name': message.from_user.first_name,
+                          'last_name': message.from_user.last_name,
+                          'username': message.from_user.username,
+                          },
+            'date': message.date.timestamp(),
+            'text': message.text,
+            'user_id': user_id,
+            }

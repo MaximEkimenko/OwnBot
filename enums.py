@@ -3,12 +3,16 @@ import enum
 
 class TaskType(str, enum.Enum):
     """Типы задач."""
-    REGULAR = 'регулярная'
-    ONCE = 'разовая'
-    DAILY = 'ежедневная'
-    WEEKLY = 'еженедельная'
     REMINDER = 'напоминание'
-    TASK = 'задача'
+    REPORT = 'ежедневный отчёт'
+    EMAIL = 'отправка почты'
+
+    @classmethod
+    def get_task_type_translate_dict(cls):
+        """Словарь перевода пользовательских параметров в тип задачи"""
+        return {'r': cls.REMINDER,  # напоминание
+                'g': cls.REPORT,  # ежедневный отчёт
+                'm': cls.EMAIL}  # отправка почты
 
     def __str__(self):
         return self.value
@@ -26,4 +30,6 @@ class FileBasedMethods(str, enum.Enum):
     PDF = 'pdf'
     XLSX = 'xlsx'
 
+
 # print(TaskType)
+

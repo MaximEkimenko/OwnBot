@@ -28,3 +28,7 @@ class TwoItersLengthError(Exception):
 
 class SameTokenError(Exception):
     """Исключение при обновлении токена без изменений"""
+
+
+class UnknownTaskTypeError(Exception):
+    """Исключение для неизвестного типа задачи по расписанию"""

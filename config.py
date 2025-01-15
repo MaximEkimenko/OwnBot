@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     BOT_TOKEN: str
     TODOIST_TOKEN: str
     SUPER_USER_TG_ID: int
+    MAIL_SERVER_TOKEN: str
 
     @property
     def db_url(self):
@@ -19,11 +20,12 @@ class Settings(BaseSettings):
 
 settings = Settings()
 BaseDIR = settings.BASE_DIR
+mail_server_token = settings.MAIL_SERVER_TOKEN
 TIME_ZONE = 6
 today = datetime.date.today() - datetime.timedelta(days=0)
 # TODO найти лучшее решение передачи даты начала отчёта по умолчанию
 first_day_to_report = datetime.date(year=2024, month=1, day=1)
 
 if __name__ == "__main__":
-    print(settings.BASE_DIR)
+    print(settings)
 

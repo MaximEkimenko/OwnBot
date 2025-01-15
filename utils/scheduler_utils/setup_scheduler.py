@@ -1,57 +1,82 @@
 from logger_config import log
-from utils.scheduler_utils.scheduler_actions import schedule_send_reminder, schedule_go
+from utils.scheduler_utils.scheduler_actions import (schedule_send_reminder,
+                                                     schedule_every_day_report,
+                                                     schedule_send_mail)
 from db.db_utils.scheduler_db_utils import get_all_users_scheduler_params
 from utils.scheduler_utils.scheduler_manager import scheduler
+from collections.abc import Callable
+
+
+def set_job(action_func: Callable, settings: dict, job_kwargs: dict) -> None:
+    """Добавление задачи в расписание"""
+    scheduler.add_job(action_func,
+                      replace_existing=True,
+                      **settings,
+                      misfire_grace_time=60,
+                      kwargs=job_kwargs
+                      )
 
 
 async def setup_scheduler(bot):
     """Настройщик расписания при запуске бота"""
-    tasks = await get_all_users_scheduler_params()
+    tasks = await get_all_users_scheduler_params()  # все задачи из БД
     reminder_settings = []
-    action_settings = []
-    for task in tasks:
-        if task["task_type"].name == "REMINDER":
-            task_params = {
-                "trigger": "cron",
-                "day_of_week": task["schedule_params"]["day_of_week"],
-                "hour": task["schedule_params"]["hour"],
-                "minute": task["schedule_params"]["minute"],
-                "id": task["schedule_params"]["id"] + str(task["user_id"]),
-                "reminder_text": task["schedule_params"]["text"],
-                "telegram_id": task["user_telegram_data"]["from_user"]["id"],
-            }
-            reminder_settings.append(task_params)
-        if task["task_type"].name == "TASK":
-            task_params = {
-                "trigger": "cron",
-                "day_of_week": task["schedule_params"]["day_of_week"],
-                "hour": task["schedule_params"]["hour"],
-                "minute": task["schedule_params"]["minute"],
-                "id": task["schedule_params"]["id"] + str(task["user_id"]),
-                "telegram_id": task["user_telegram_data"]["from_user"]["id"],
-            }
-            action_settings.append(task_params)
+    report_settings = []
+    email_settings = []
 
-    common_kwargs = {'bot': bot}
-    reminder_kwargs = dict()
-    action_kwargs = dict()
-    # добавление задачи типа reminder
+    for task in tasks:
+        match task["task_type"].name:
+            case "REMINDER":
+                task_params = {
+                    "trigger": "cron",
+                    "day_of_week": task["schedule_params"]["day_of_week"],
+                    "hour": task["schedule_params"]["hour"],
+                    "minute": task["schedule_params"]["minute"],
+                    "id": task["schedule_params"]["id"] + str(task["user_id"]),
+                    "task_text": task["schedule_params"]["task_kwargs"]["task_text"],
+                    "telegram_id": task["user_telegram_data"]["from_user"]["id"],
+                }
+                reminder_settings.append(task_params)
+            case "REPORT":
+                task_params = {
+                    "trigger": "cron",
+                    "day_of_week": task["schedule_params"]["day_of_week"],
+                    "hour": task["schedule_params"]["hour"],
+                    "minute": task["schedule_params"]["minute"],
+                    "id": task["schedule_params"]["id"] + str(task["user_id"]),
+                    "telegram_id": task["user_telegram_data"]["from_user"]["id"],
+                }
+                report_settings.append(task_params)
+            case "EMAIL":
+                task_params = {
+                    "trigger": "cron",
+                    "day_of_week": task["schedule_params"]["day_of_week"],
+                    "hour": task["schedule_params"]["hour"],
+                    "minute": task["schedule_params"]["minute"],
+                    "id": task["schedule_params"]["id"] + str(task["user_id"]),
+                    "receivers": task["schedule_params"]["task_kwargs"]["receivers"],
+                    "files": task["schedule_params"]["task_kwargs"]["files"],
+                }
+                email_settings.append(task_params)
+
+    # добавление задачи типа REMINDER
     for reminder_setting in reminder_settings:
-        reminder_kwargs.update(common_kwargs |
-                               {"telegram_id": reminder_setting.pop("telegram_id"),
-                                "reminder_text": reminder_setting.pop("reminder_text")}
-                               )
-        scheduler.add_job(schedule_send_reminder, replace_existing=True,
-                          **reminder_setting,
-                          misfire_grace_time=60,
-                          kwargs=reminder_kwargs)
-    # установка задачи типа task
-    for action_setting in action_settings:
-        action_kwargs.update(common_kwargs | {"telegram_id": action_setting.pop("telegram_id")})
-        scheduler.add_job(schedule_go, replace_existing=True,
-                          **action_setting,
-                          misfire_grace_time=60,
-                          kwargs=action_kwargs)
+        reminder_kwargs = {'bot': bot,
+                           "telegram_id": reminder_setting.pop("telegram_id"),
+                           "task_text": reminder_setting.pop("task_text")}
+        set_job(action_func=schedule_send_reminder, settings=reminder_setting, job_kwargs=reminder_kwargs)
+    # добавление задачи типа REPORT
+    for report_setting in report_settings:
+        report_kwargs = {'bot': bot,
+                         "telegram_id": report_setting.pop("telegram_id")}
+        set_job(action_func=schedule_every_day_report, settings=report_setting, job_kwargs=report_kwargs)
+    # добавление задачи типа EMAIL
+    for email_setting in email_settings:
+        email_kwargs = {'bot': bot,
+                        "receivers": email_setting.pop("receivers"),
+                        "files": email_setting.pop("files")}
+        set_job(action_func=schedule_send_mail, settings=email_setting, job_kwargs=email_kwargs)
+
     # запуск планировщика
     try:
         scheduler.start()
