@@ -12,14 +12,9 @@ from utils.scheduler_utils.setup_scheduler import setup_scheduler
 
 
 # TODO
-#  refactor scheduler_params
 #  migrate from old version on the phone
-#   добавить показатель cash (обновляться его через update аналогично kcals, steps)
-#   обновление таблицы indicator_params с учётом cash indicator
-#   заполнение данных из старой таблицы
-#   создание requirements.txt
-#   clean the logs
-#   копирование на устройство установка окружения и зависимостей
+#   push
+#   копирование на устройство установка окружения и зависимостей запуск, тесты
 
 # TODO V1.0:
 #  tests, refactoring after
@@ -29,6 +24,9 @@ from utils.scheduler_utils.setup_scheduler import setup_scheduler
 #  new features with remaining file TODOS:
 #  обработка метки @Achievement  report types, report settings interface, user settings interface,
 #  scheduler settings interface etc
+#  обработка ошибки отсутствия первоначального заполнения IndicatorParams, подробная инструкция настройки,
+#  в том числе настройки стилей отчётов
+#  попробовать запустить самому по инструкции на другом устройстве с другими показателями
 
 async def on_startup():  # функция выполняется при запуске бота
     log.info("Бот запушен.")
@@ -41,7 +39,8 @@ async def on_shutdown():
 async def set_commands(bot: Bot):
     """Установка команд в меню клиента приложения телеграм"""
     commands = [BotCommand(command="/go", description="Выполнить расчёт, получить отчёт."),
-                BotCommand(command="/tasksget", description="Получение списка всех запланированных задач.")
+                BotCommand(command="/tasksget", description="Получение списка всех запланированных задач."),
+                BotCommand(command="/db", description="Отправка копии БД на электронную почту"),
                 ]
     await bot.set_my_commands(commands)
 

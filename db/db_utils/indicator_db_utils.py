@@ -166,3 +166,7 @@ async def get_indicator_params_id_dict(session: AsyncSession, user_id: int) -> d
     indicator_params = result.scalars().all()
 
     return {indicator.indicator_name: indicator.id for indicator in indicator_params}
+
+
+if __name__ == '__main__':
+    asyncio.run(add_indicator_params_json(1))

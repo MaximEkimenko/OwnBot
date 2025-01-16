@@ -72,8 +72,7 @@ async def setup_scheduler(bot):
         set_job(action_func=schedule_every_day_report, settings=report_setting, job_kwargs=report_kwargs)
     # добавление задачи типа EMAIL
     for email_setting in email_settings:
-        email_kwargs = {'bot': bot,
-                        "receivers": email_setting.pop("receivers"),
+        email_kwargs = {"receivers": email_setting.pop("receivers"),
                         "files": email_setting.pop("files")}
         set_job(action_func=schedule_send_mail, settings=email_setting, job_kwargs=email_kwargs)
 

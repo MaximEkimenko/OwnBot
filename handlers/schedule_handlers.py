@@ -6,13 +6,13 @@ from utils.common_utils import (verify_string_as_filename,
 from utils.handlers_utils import user_auth
 from logger_config import log
 from own_bot_exceptions import StringInputError, StringLengthError
-from utils.scheduler_utils.scheduler_params import verify_input_create_scheduler_params
+from utils.scheduler_utils.scheduler_params import validate_input_create_scheduler_params
 from utils.scheduler_utils.scheduler_tasks_managment import add_or_update_scheduler_task, delete_scheduler_task
 
 router = Router(name=__name__)
 
 # TODO
-#  Добавить стратегии выбора выдов ежедневного отчёта в verify_input_create_scheduler_params в зависимости
+#  Добавить стратегии выбора видов ежедневного отчёта в verify_input_create_scheduler_params в зависимости
 #  от task_param при task_type = REPORT
 #  Допустимо оставить текущую логику по умолчанию (если пользователь не передал специальный параметр).
 
@@ -26,10 +26,12 @@ async def handler_taskadd(message: types.Message):
     is_update = False
     user_telegram_id = message.from_user.id
     task_elements = message.text.split(maxsplit=6)[1:]  # строка параметров пользователя
-    if len(task_elements) != 6:
+    command_length = 6
+    if len(task_elements) != command_length:
         await message.answer(text="Неверно введена команда /taskadd. Смотри /help.")
-        log.warning("Несоответствие параметрам при команден /taskadd {text} "
-                    "пользователем id={user}.", text=message.text, user=user.user_id
+        log.warning("Несоответствие параметрам при команде /taskadd {text} "
+                    "пользователем id={user}. Длина команды {command_length} элементов",
+                    text=message.text, user=user.user_id, command_length=command_length
                     )
         return
 
@@ -40,19 +42,19 @@ async def handler_taskadd(message: types.Message):
         await message.answer(text=f"Неверно введено имя задачи. {e.args[0]}")
         log.warning("Ввод неверного имени задачи для показателя. {errors}", errors=e.args[0])
         return
-    # проверка существующей задачи
+
+    # получение и проверка данных задач
+    schedule_params = await validate_input_create_scheduler_params(message, task_elements)
+    if schedule_params is None:
+        return
+
+    # проверка существующей задачи оповещение об обновлении
     if await user.check_schedule_exists(task_name=task_name):
         is_update = True
-        await message.answer(text=f"Задача {task_name!r} уже существует. Задача будет обновлена.")
+        await message.answer(text=f"Задача {task_name!r} уже существует.\nЗадача будет обновлена.")
         log.info("Обновление существующей задачи {task} пользователем {user}",
                  user=user_telegram_id,
                  task=task_name)
-        # return
-
-    # получение и проверка данных графика задач с учётом типа задачи
-    schedule_params = await verify_input_create_scheduler_params(message, task_elements)
-    if not schedule_params:
-        return
 
     schedule_params.update({"id": task_name})
     # получение данных telegram
@@ -68,9 +70,6 @@ async def handler_taskadd(message: types.Message):
         # добавление задачи в планировщик
         add_or_update_scheduler_task(schedule_params=schedule_params,
                                      user_id=user.user_id,
-                                     # telegram_id=message.from_user.id,
-                                     # bot=message.bot,
-                                     # task_type=schedule_params["task_type"]
                                      )
         # сохранение задачи в БД
         if schedule_params["task_kwargs"].get("bot"):
@@ -79,7 +78,8 @@ async def handler_taskadd(message: types.Message):
             await reminder.update_reminder()
         else:
             await reminder.create_reminder()
-        await message.answer(text=f"Задача {task_name!r} успешно добавлена.")
+        task_type = schedule_params['task_type'].value
+        await message.answer(text=f"Задача {task_name!r} с типом {task_type!r} успешно добавлена.")
         log.info("Задача {task} для пользователя {user} добавлена в БД успешно.",
                  task=task_name,
                  user=user_telegram_id)

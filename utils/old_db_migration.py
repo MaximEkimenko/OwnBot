@@ -114,7 +114,7 @@ async def migrate_old_data(indicators_data: dict, session: AsyncSession) -> bool
 
 
 if __name__ == '__main__':
+    data = asyncio.run(get_old_data())
+    print(asyncio.run(get_old_data()))
+    print(asyncio.run(migrate_old_data(data)))
     pass
-    # data = asyncio.run(get_old_data())
-    # print(asyncio.run(get_old_data()))
-    # print(asyncio.run(migrate_old_data(data)))

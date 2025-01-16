@@ -1,11 +1,6 @@
-from aiogram import Bot
-import enums
-
 from utils.scheduler_utils.scheduler_manager import scheduler
-from utils.scheduler_utils.scheduler_actions import schedule_send_reminder, schedule_every_day_report, schedule_send_mail
-
-from own_bot_exceptions import UnknownTaskTypeError
-
+from utils.scheduler_utils.scheduler_actions import (schedule_send_reminder, schedule_every_day_report,
+                                                     schedule_send_mail)
 from logger_config import log
 
 

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Never
 from aiogram import types
 from logger_config import log
 import re
@@ -8,6 +8,7 @@ from own_bot_exceptions import (EmptyValueInputError,
                                 CronWeekDayInputError,
                                 StringLengthError,
                                 IntInputError)
+
 
 
 def verify_string_as_filename(input_string: str) -> str:
@@ -141,3 +142,12 @@ def get_min_telegram_data(message: types.Message, user_id: int) -> dict:
             'text': message.text,
             'user_id': user_id,
             }
+
+
+def should_be_never_called() -> Never:
+    """Функция не должна вызываться """
+    raise AssertionError("Вызвана функция should_be_never_called.")
+
+
+# if __name__ == '__main__':
+#     should_be_never_called()

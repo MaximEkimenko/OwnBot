@@ -1,13 +1,9 @@
-import datetime
-
 from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.utils.chat_action import ChatActionSender
-from config import settings
-from utils.common_utils import (verify_string_as_filename,
-                                get_bot_for_schedule,
-                                )
-from utils.handlers_utils import user_auth
+from utils.common_utils import verify_string_as_filename, get_bot_for_schedule
+from utils.handlers_utils import user_auth, send_email
+# from utils.scheduler_utils.scheduler_actions import schedule_send_mail
 from logger_config import log
 import enums
 
@@ -55,6 +51,7 @@ async def handler_ind(message: types.Message, schedule_bot=None):
 @router.message(Command('report_create'))
 async def handler_report_create(message: types.Message, schedule_bot=None):
     """Команда получения отчётов"""
+    # TODO REFACTOR
     user = await user_auth(message)
     if user is False:
         return
@@ -148,6 +145,10 @@ async def handler_update(message: types.Message):
 
     # обновление показателей
     result = await user.indicators.manual_update_save_indicators(verificated_dict)
+    log.info("Успешное обновление показателей {indicators} значениями {values} командой /update. Пользователь id={id} "
+             "telegram_id={telegram_id}.",
+             indicators=indicators, values=values,
+             id=user.user_id, telegram_id=message.from_user.id)
     await message.answer(result)
     return
 
@@ -162,3 +163,28 @@ async def handler_go(message: types.Message, schedule_bot=None):
     await handler_ind(message, schedule_bot)
     # генерация и отправка отчёта
     await handler_report_create(message, schedule_bot)
+    log.info("Успешный запуск команды /go. Пользователь id={id} telegram_id={telegram_id}.",
+             id=user.user_id, telegram_id=message.from_user.id)
+
+
+@router.message(Command('db'))
+async def handler_db(message: types.Message):
+    """Отправка копии файла БД на электронную почту"""
+    user = await user_auth(message)
+    if user is False:
+        return
+    # TODO добавить обработку варианта заполнения через sender.json
+    from settings.mail_sender_config import receivers, files
+    try:
+        await send_email(receivers=receivers, files=files)
+        await message.answer(text=f'"Письмо отправлено на: {receivers[0]}."')
+        log.info("Письмо отправлено по ручной команде db на: {receiver}.",
+                 receiver=receivers[0])
+    except Exception as e:
+        await message.answer(text=f'Ошибка отправки письма.')
+        log.error("Ошибка при отправке письма ручной командой db: на: {receiver}."
+                  "пользователем id={user_id.}, telegram_id={telegram_id}",
+                  receiver=receivers[0],
+                  user=user.user_id,
+                  telegram_id=message.from_user.id)
+        log.exception(e)

@@ -27,6 +27,7 @@ class ScheduleTask:
     async def update_reminder(self):
         """Обновление напоминания"""
         await update_reminder_data(user_id=self.user_id,
+                                   task_type=self.task_type,
                                    schedule_params=self.schedule_params,
                                    user_telegram_data=self.user_telegram_data)
 

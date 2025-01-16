@@ -8,6 +8,7 @@ from typing import Sequence
 
 async def get_description_todoist_dict(user_id: int) -> str:
     """Получение словаря задач todoist с для расчёта по description"""
+    # TODO обработать ошибку отсутствия первоначального заполнения IndicatorParams
     data = await get_literal_project_dict(user_id=user_id)
     tasks: Sequence[TodoistTask] = await todoist_task_db_utils.get_description_todoist_tasks(literal_dict=data)
     literal_indicator = {}

@@ -57,6 +57,7 @@ async def update_reminder_data(session: AsyncSession,
                                schedule_params: dict,
                                user_telegram_data: dict,
                                user_id: int,
+                               task_type: enums.TaskType
                                ) -> bool:
     """Обновление параметров напоминания"""
     # обновление данных
@@ -68,6 +69,7 @@ async def update_reminder_data(session: AsyncSession,
         .values(
             schedule_params=schedule_params,
             user_telegram_data=user_telegram_data,
+            task_type=task_type
         )
     )
     try:
