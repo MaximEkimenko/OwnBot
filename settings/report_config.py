@@ -17,7 +17,7 @@ preferred_order = ['book',
 
 # раскраска
 preferred_colors = {'book': 'green', 'audiobook': 'green', 'video': 'green', 'study_done': 'green',
-                    'cndx': 'red', 'cash:': 'red', 'wealth_done': 'red', 'poms': 'red', 'add_income': 'red',
+                    'cndx': 'red', 'cash': 'red', 'wealth_done': 'red', 'poms': 'red', 'add_income': 'red',
                     'steps': 'gold', 'kcals': 'gold', 'health_done': 'gold',
                     'studio_done': 'blue',
                     'social_done': 'cyan ',

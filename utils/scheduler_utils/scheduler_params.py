@@ -52,7 +52,6 @@ async def create_task_kwargs(message: types.Message, task_type, task_param: str)
     """Создание task_kwargs по task_param"""
     telegram_id = message.from_user.id
     bot = message.bot
-    print(task_type)
     match task_type:
         case enums.TaskType.REMINDER:
             try:
@@ -80,7 +79,6 @@ async def create_task_kwargs(message: types.Message, task_type, task_param: str)
 
         case _:
             log.warning("Тип отчёта {task_type!r} не учтён в match case.", task_type=task_type)
-            print('!!!!!!!!!')
             should_be_never_called()
 
 

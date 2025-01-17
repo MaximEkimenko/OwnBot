@@ -4,7 +4,7 @@ import io
 from enums import ReportType
 from utils.report_utils import reports_creation
 from db.db_utils.report_db_utils import save_report_data
-from config import first_day_to_report, today
+from config import first_day_to_report, init_today
 
 # TODO V1.0:
 #       - Добавить функцию получения отчёта сохранённого в БД
@@ -32,7 +32,7 @@ class Report:
         if start is None:
             self.start = first_day_to_report
         if end is None:
-            self.end = today
+            self.end = init_today()
         self.user_id = user_id
         self.content = content
 

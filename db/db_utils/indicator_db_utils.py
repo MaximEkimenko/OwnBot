@@ -13,7 +13,7 @@ from pathlib import Path
 import json
 from logger_config import log
 from sqlalchemy.exc import IntegrityError
-from config import today
+from config import init_today
 
 
 # CREATE
@@ -52,6 +52,7 @@ async def add_indicator_params_json(user_id: int, session: AsyncSession) -> bool
 @connection
 async def create_or_update_indicators(user_id: int, data: dict, session: AsyncSession) -> str:
     """Заполнение показателей из словаря data"""
+    today = init_today()
     result_string = ''
     for indicator_name, indicator_value_dict in data.items():
         indicator_params_id = indicator_value_dict['params_id']

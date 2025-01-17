@@ -10,7 +10,6 @@ from own_bot_exceptions import (EmptyValueInputError,
                                 IntInputError)
 
 
-
 def verify_string_as_filename(input_string: str) -> str:
     """
     Асинхронно проверяет строку на возможность использования её в качестве имени файла.
@@ -147,7 +146,3 @@ def get_min_telegram_data(message: types.Message, user_id: int) -> dict:
 def should_be_never_called() -> Never:
     """Функция не должна вызываться """
     raise AssertionError("Вызвана функция should_be_never_called.")
-
-
-# if __name__ == '__main__':
-#     should_be_never_called()

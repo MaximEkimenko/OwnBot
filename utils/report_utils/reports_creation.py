@@ -1,6 +1,5 @@
 import io
 import pygal
-import asyncio
 import datetime
 from pygal.style import Style
 

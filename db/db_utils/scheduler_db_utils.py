@@ -3,7 +3,6 @@ from sqlalchemy import select, exists, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from db.database import connection
 from db.models import ScheduleTask
-from utils.common_utils import get_flat_dict
 
 from logger_config import log
 

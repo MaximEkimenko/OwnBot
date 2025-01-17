@@ -161,6 +161,10 @@ async def handler_go(message: types.Message, schedule_bot=None):
         return
     # расчёт показателей
     await handler_ind(message, schedule_bot)
+
+    # TODO проверка какие показатели не были переданы в этот день и присвоение значений по умолчанию
+    #  в зависимости от IndicatorParams
+
     # генерация и отправка отчёта
     await handler_report_create(message, schedule_bot)
     log.info("Успешный запуск команды /go. Пользователь id={id} telegram_id={telegram_id}.",

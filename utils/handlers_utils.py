@@ -8,7 +8,9 @@ from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 from settings.mail_sender_config import mail_smpt_host, mail_smpt_port, mail_sender_address
-from config import mail_server_token, today
+from config import mail_server_token, init_today
+
+
 
 
 async def user_auth(message: types.Message) -> User | bool:
@@ -30,6 +32,7 @@ async def user_auth(message: types.Message) -> User | bool:
 
 async def send_email(receivers: tuple, files: tuple) -> bool:
     """Функция отправки письма получателями из receivers с файлами files"""
+    today = init_today()
     for file in files:
         if not Path(file).exists():
             log.error("Файл {file} не найден.", file=file)

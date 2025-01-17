@@ -7,13 +7,14 @@ from todoist_api.todoist_data import get_todoist_data
 from logger_config import log
 from typing import Sequence
 from sqlalchemy import text
-from config import today
+from config import init_today
 
 
 @connection
 async def save_todoist_tasks(*, session: AsyncSession, user_id: int, todoist_token: str) -> str:
     """Сохранение в БД данных todoist"""
     # данные todoist
+    today = init_today()
     todoist_data = await get_todoist_data(todoist_token)
     result_string = ''
     if not todoist_data:
@@ -90,6 +91,7 @@ async def save_todoist_tasks(*, session: AsyncSession, user_id: int, todoist_tok
 @connection
 async def get_description_todoist_tasks(literal_dict: dict, session: AsyncSession) -> Sequence[TodoistTask]:
     """Получение задач todoist по словарю литералов за текущий день"""
+    today = init_today()
     conditions = []
     for project, data_dict in literal_dict.items():
         for literal in data_dict.keys():
@@ -119,6 +121,7 @@ async def get_description_todoist_tasks(literal_dict: dict, session: AsyncSessio
 @connection
 async def get_quantity_todoist_task(project_indicator_dict: dict, session: AsyncSession):
     """Получение задач todoist по словарю показателей за текущий день"""
+    today = init_today()
     conditions = []
     for project, _ in project_indicator_dict.items():
         conditions.append(
