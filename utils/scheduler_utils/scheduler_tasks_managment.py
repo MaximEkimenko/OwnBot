@@ -1,3 +1,5 @@
+import datetime
+
 from utils.scheduler_utils.scheduler_manager import scheduler
 from utils.scheduler_utils.scheduler_actions import (schedule_send_reminder, schedule_every_day_report,
                                                      schedule_send_mail)
@@ -30,7 +32,7 @@ def add_or_update_scheduler_task(schedule_params: dict, user_id: int):
         hour=schedule_params["hour"],
         minute=schedule_params["minute"],
         id=task_id,
-        misfire_grace_time=60,
+        misfire_grace_time=60 * 60,
         kwargs=task_kwargs
     )
     log.info("Задача:{task_id} запланирована успешно для пользователя:{user}, "
@@ -46,3 +48,15 @@ def delete_scheduler_task(task_name: str, user_id: int) -> None:
         scheduler.remove_job(task_id)
     log.info("Задача:{task_id} удалена успешно для пользователя:{user}.",
              user=user_id, task_id=task_id)
+
+
+def get_planned_jobs(db_tasks) -> list:
+    """Все запланированные задачи"""
+    # список id задач пользователя из БД
+    tasks_id = [str(task[0]) + str(task[1]) for task in db_tasks]
+    # запланированные задачи пользователя
+    jobs = [(job.id[:-1],
+             str(job.trigger),
+             job.next_run_time.strftime("%d.%m.%Y %H:%M:%S")) for job in scheduler.get_jobs()
+            if job.id in tasks_id]
+    return jobs

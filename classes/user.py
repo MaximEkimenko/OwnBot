@@ -8,7 +8,6 @@ from classes.todoist_task import TodoistTask
 from classes.schedule_task import ScheduleTask
 from classes.indicator_param import IndicatorParam
 
-from config import settings
 from db.db_utils import user_db_utils, todoist_task_db_utils
 from db.db_utils.scheduler_db_utils import get_scheduler_params, is_schedule_exists
 from own_bot_exceptions import UserDoesNotExistError
@@ -102,6 +101,7 @@ class User:
         """Получение всех задач"""
         tasks = await get_scheduler_params(user_id=self.user_id)
         return [(line["name"],
+                 line["user_id"],
                  line["task_type"],
                  line["schedule_params"]["day_of_week"],
                  line["schedule_params"]["hour"],

@@ -41,11 +41,16 @@ async def handler_ind(message: types.Message, schedule_bot=None):
         await bot.send_message(chat_id=user_id, text=todoist_result)
     # расчёт показателей и сохранение в БД
     db_result = await user.indicators.calculate_save_indicators()
+    # description based
     if db_result[0]:
         await bot.send_message(chat_id=user_id, text=db_result[0])
-
+    # quantity based
     if db_result[1]:
         await bot.send_message(chat_id=user_id, text=db_result[1])
+    # default values
+    if db_result[2]:
+        await bot.send_message(chat_id=user_id, text="Заполнение значениями по умолчанию:")
+        await bot.send_message(chat_id=user_id, text=db_result[2])
 
 
 @router.message(Command('report_create'))
@@ -161,9 +166,6 @@ async def handler_go(message: types.Message, schedule_bot=None):
         return
     # расчёт показателей
     await handler_ind(message, schedule_bot)
-
-    # TODO проверка какие показатели не были переданы в этот день и присвоение значений по умолчанию
-    #  в зависимости от IndicatorParams
 
     # генерация и отправка отчёта
     await handler_report_create(message, schedule_bot)

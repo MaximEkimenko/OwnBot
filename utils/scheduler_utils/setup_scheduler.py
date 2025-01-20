@@ -12,7 +12,7 @@ def set_job(action_func: Callable, settings: dict, job_kwargs: dict) -> None:
     scheduler.add_job(action_func,
                       replace_existing=True,
                       **settings,
-                      misfire_grace_time=60,
+                      misfire_grace_time=60 * 60,
                       kwargs=job_kwargs
                       )
 

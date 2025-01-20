@@ -2,6 +2,7 @@ from typing import List
 from calculate_methods.description_based import get_description_todoist_dict
 from calculate_methods.quantity_based import get_quantity_todoist_dict
 from calculate_methods.pdf_based import pdf_indicator_to_db
+from calculate_methods.default_values_based import get_default_values_dict
 from classes.indicator_param import IndicatorParam
 from classes.todoist_task import TodoistTask
 from io import BytesIO
@@ -41,8 +42,10 @@ class Indicator:
         description_based_result = await get_description_todoist_dict(self.user_id)
         # количественней метод
         quantity_result = await get_quantity_todoist_dict(self.user_id)
+        # значения по умолчанию
+        default_values = await get_default_values_dict(self.user_id)
 
-        return description_based_result, quantity_result
+        return description_based_result, quantity_result, default_values
 
     async def verificate_indicators(self, indicators_to_update: dict) -> dict:
         """Валидация показателей"""

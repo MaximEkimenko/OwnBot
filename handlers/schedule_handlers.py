@@ -7,7 +7,8 @@ from utils.handlers_utils import user_auth
 from logger_config import log
 from own_bot_exceptions import StringInputError, StringLengthError
 from utils.scheduler_utils.scheduler_params import validate_input_create_scheduler_params
-from utils.scheduler_utils.scheduler_tasks_managment import add_or_update_scheduler_task, delete_scheduler_task
+from utils.scheduler_utils.scheduler_tasks_managment import (add_or_update_scheduler_task,
+                                                             delete_scheduler_task, get_planned_jobs)
 
 router = Router(name=__name__)
 
@@ -138,7 +139,9 @@ async def tasksget(message: types.Message):
     user = await user_auth(message)
     if user is False:
         return
-    tasks = await user.get_all_tasks()
+    db_tasks = await user.get_all_tasks()
+
+    tasks = get_planned_jobs(db_tasks)
     if not tasks:
         await message.answer(text="У вас нет запланированных задач.")
         return

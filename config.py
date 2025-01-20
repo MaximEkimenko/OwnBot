@@ -1,3 +1,5 @@
+from aiogram import Bot
+from aiogram.types import BotCommand
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 import datetime
@@ -32,6 +34,14 @@ def init_today() -> datetime:
     return datetime.date.today() - datetime.timedelta(days=0)
 
 
+async def set_bot_commands(bot: Bot):
+    """Установка команд в меню клиента приложения телеграм"""
+    commands = [BotCommand(command="/go", description="Выполнить расчёт, получить отчёт."),
+                BotCommand(command="/tasksget", description="Получение списка всех запланированных задач."),
+                BotCommand(command="/db", description="Отправка копии БД на электронную почту"),
+                ]
+    await bot.set_my_commands(commands)
+
+
 if __name__ == "__main__":
     print(settings)
-

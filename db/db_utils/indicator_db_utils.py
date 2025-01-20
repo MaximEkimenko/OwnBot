@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 from collections import defaultdict
 from typing import Sequence
 
@@ -76,7 +77,6 @@ async def create_or_update_indicators(user_id: int, data: dict, session: AsyncSe
                 indicator_name=indicator_name,
                 indicator_params_id=indicator_params_id,
                 indicator_value=indicator_value,
-
             )
             session.add(indicator)
             await session.commit()
@@ -169,5 +169,28 @@ async def get_indicator_params_id_dict(session: AsyncSession, user_id: int) -> d
     return {indicator.indicator_name: indicator.id for indicator in indicator_params}
 
 
+async def get_user_indicators(user_id: int) -> list:
+    """Получение списка показателей пользователя """
+    indicators = await get_indicator_params(params_filter={'user_id': user_id})
+    return [line.to_dict() for line in indicators]
+
+
+@connection
+async def get_added_indicators(user_id: int, date: datetime, session: AsyncSession):
+    """Получение заполненных показателей на дату date"""
+    # today = init_today()
+    stmt = (select(Indicator)
+            .where(Indicator.user_id == user_id,
+                   Indicator.date == date)
+            )
+    result = await session.execute(stmt)
+    return {line.indicator_name: line.indicator_value for line in result.scalars().all()}
+
+
 if __name__ == '__main__':
-    asyncio.run(add_indicator_params_json(1))
+    pass
+    # _indicators = asyncio.run(get_user_indicators(user_id=1))
+    res = asyncio.run(get_added_indicators(user_id=1))
+    #
+    # print(_indicators)
+    print(res)
