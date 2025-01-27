@@ -1,14 +1,21 @@
 from aiogram import Router, types
 from aiogram.filters import Command
-from utils.common_utils import (verify_string_as_filename,
-                                verify_string_length,
-                                list_of_tuples_to_str, get_telegram_data_dict)
-from utils.handlers_utils import user_auth
+
+from classes.user import User
 from logger_config import log
 from own_bot_exceptions import StringInputError, StringLengthError
+from utils.common_utils import (
+    verify_string_length,
+    list_of_tuples_to_str,
+    get_telegram_data_dict,
+    verify_string_as_filename,
+)
 from utils.scheduler_utils.scheduler_params import validate_input_create_scheduler_params
-from utils.scheduler_utils.scheduler_tasks_managment import (add_or_update_scheduler_task,
-                                                             delete_scheduler_task, get_planned_jobs)
+from utils.scheduler_utils.scheduler_tasks_managment import (
+    get_planned_jobs,
+    delete_scheduler_task,
+    add_or_update_scheduler_task,
+)
 
 router = Router(name=__name__)
 
@@ -18,12 +25,12 @@ router = Router(name=__name__)
 #  Допустимо оставить текущую логику по умолчанию (если пользователь не передал специальный параметр).
 
 
-@router.message(Command('taskadd'))
-async def handler_taskadd(message: types.Message):
+@router.message(Command("taskadd"))
+async def handler_taskadd(message: types.Message, user: User):
     """Команда добавления / обновления задачи"""
-    user = await user_auth(message)
-    if user is False:
-        return
+    # user = await user_auth(message)
+    # if user is False:
+    #     return
     is_update = False
     user_telegram_id = message.from_user.id
     task_elements = message.text.split(maxsplit=6)[1:]  # строка параметров пользователя
@@ -32,7 +39,7 @@ async def handler_taskadd(message: types.Message):
         await message.answer(text="Неверно введена команда /taskadd. Смотри /help.")
         log.warning("Несоответствие параметрам при команде /taskadd {text} "
                     "пользователем id={user}. Длина команды {command_length} элементов",
-                    text=message.text, user=user.user_id, command_length=command_length
+                    text=message.text, user=user.user_id, command_length=command_length,
                     )
         return
 
@@ -65,7 +72,7 @@ async def handler_taskadd(message: types.Message):
         name=task_name,
         task_type=schedule_params["task_type"],
         schedule_params=schedule_params,
-        user_telegram_data=user_telegram_data
+        user_telegram_data=user_telegram_data,
     )
     try:
         # добавление задачи в планировщик
@@ -79,7 +86,7 @@ async def handler_taskadd(message: types.Message):
             await reminder.update_reminder()
         else:
             await reminder.create_reminder()
-        task_type = schedule_params['task_type'].value
+        task_type = schedule_params["task_type"].value
         await message.answer(text=f"Задача {task_name!r} с типом {task_type!r} успешно добавлена.")
         log.info("Задача {task} для пользователя {user} добавлена в БД успешно.",
                  task=task_name,
@@ -92,12 +99,12 @@ async def handler_taskadd(message: types.Message):
         log.exception(e)
 
 
-@router.message(Command('taskdel'))
-async def taskdel(message: types.Message):
+@router.message(Command("taskdel"))
+async def taskdel(message: types.Message, user: User):
     """Команда удаления задачи"""
-    user = await user_auth(message)
-    if user is False:
-        return
+    # user = await user_auth(message)
+    # if user is False:
+    #     return
     user_telegram_id = message.from_user.id
     reminder_elements = message.text.split(maxsplit=2)[1:]  # строка команды с именем задачи
     # проверка имени задачи
@@ -116,7 +123,7 @@ async def taskdel(message: types.Message):
         return
     # удаление задачи
     reminder = await user.schedule_config(
-        name=task_name
+        name=task_name,
     )
     try:
         delete_scheduler_task(task_name=task_name, user_id=user.user_id)
@@ -133,12 +140,12 @@ async def taskdel(message: types.Message):
         log.exception(e)
 
 
-@router.message(Command('tasksget'))
-async def tasksget(message: types.Message):
+@router.message(Command("tasksget"))
+async def tasksget(message: types.Message, user: User):
     """Получение всех задач пользователя"""
-    user = await user_auth(message)
-    if user is False:
-        return
+    # user = await user_auth(message)
+    # if user is False:
+    #     return
     db_tasks = await user.get_all_tasks()
 
     tasks = get_planned_jobs(db_tasks)

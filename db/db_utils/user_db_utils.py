@@ -1,16 +1,14 @@
-import asyncio
 from typing import Any
-from own_bot_exceptions import SameTokenError
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.database import connection
 from db.models import UserModel
-
-from config import settings
+from db.database import connection
 from logger_config import log
+from own_bot_exceptions import SameTokenError
 
 
 def joined_to_dict(user_model, user_dict: dict, joined_models: list) -> dict:
@@ -42,7 +40,7 @@ async def add_user_todoist_token(*, todoist_token: str, user_id: int, session: A
     token = result.scalar_one_or_none()
 
     if token == todoist_token:
-        raise SameTokenError('Такой todoist token уже ведён. Введите новый.')
+        raise SameTokenError("Такой todoist token уже ведён. Введите новый.")
 
     query = update(UserModel).values(todoist_token=todoist_token)
     await session.execute(query)
@@ -52,7 +50,7 @@ async def add_user_todoist_token(*, todoist_token: str, user_id: int, session: A
 
 @connection
 async def get_user_data_by_telegram_id(*, telegram_id: int, session: AsyncSession) -> dict[str | int, Any] | None:
-    """Получение записи пользователя по telegram_id"""
+    """Получение записи пользователя по telegram_id."""
     query = (select(UserModel).where(UserModel.telegram_id == telegram_id)
              .options(joinedload(UserModel.tasks))
              .options(joinedload(UserModel.reports))
@@ -64,7 +62,7 @@ async def get_user_data_by_telegram_id(*, telegram_id: int, session: AsyncSessio
         return None
 
     user_data = {
-        user.telegram_id: user.to_dict()
+        user.telegram_id: user.to_dict(),
     }
 
     for joined_model in (user.tasks, user.reports):
@@ -72,5 +70,5 @@ async def get_user_data_by_telegram_id(*, telegram_id: int, session: AsyncSessio
 
     return user_data
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

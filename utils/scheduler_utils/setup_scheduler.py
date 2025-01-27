@@ -1,10 +1,13 @@
-from logger_config import log
-from utils.scheduler_utils.scheduler_actions import (schedule_send_reminder,
-                                                     schedule_every_day_report,
-                                                     schedule_send_mail)
-from db.db_utils.scheduler_db_utils import get_all_users_scheduler_params
-from utils.scheduler_utils.scheduler_manager import scheduler
 from collections.abc import Callable
+
+from logger_config import log
+from db.db_utils.scheduler_db_utils import get_all_users_scheduler_params
+from utils.scheduler_utils.scheduler_actions import (
+    schedule_send_mail,
+    schedule_send_reminder,
+    schedule_every_day_report,
+)
+from utils.scheduler_utils.scheduler_manager import scheduler
 
 
 def set_job(action_func: Callable, settings: dict, job_kwargs: dict) -> None:
@@ -12,8 +15,9 @@ def set_job(action_func: Callable, settings: dict, job_kwargs: dict) -> None:
     scheduler.add_job(action_func,
                       replace_existing=True,
                       **settings,
-                      misfire_grace_time=60 * 60,
-                      kwargs=job_kwargs
+                      misfire_grace_time=60 * 2,
+                      kwargs=job_kwargs,
+                      jobstore="default",
                       )
 
 
@@ -61,13 +65,13 @@ async def setup_scheduler(bot):
 
     # добавление задачи типа REMINDER
     for reminder_setting in reminder_settings:
-        reminder_kwargs = {'bot': bot,
+        reminder_kwargs = {"bot": bot,
                            "telegram_id": reminder_setting.pop("telegram_id"),
                            "task_text": reminder_setting.pop("task_text")}
         set_job(action_func=schedule_send_reminder, settings=reminder_setting, job_kwargs=reminder_kwargs)
     # добавление задачи типа REPORT
     for report_setting in report_settings:
-        report_kwargs = {'bot': bot,
+        report_kwargs = {"bot": bot,
                          "telegram_id": report_setting.pop("telegram_id")}
         set_job(action_func=schedule_every_day_report, settings=report_setting, job_kwargs=report_kwargs)
     # добавление задачи типа EMAIL
@@ -76,9 +80,9 @@ async def setup_scheduler(bot):
                         "files": email_setting.pop("files")}
         set_job(action_func=schedule_send_mail, settings=email_setting, job_kwargs=email_kwargs)
 
-    # запуск планировщика
     try:
         scheduler.start()
         log.debug("Планировщик успешно запущен.")
     except Exception as e:
         log.error("Ошибка при запуске планировщика.", exc_info=e)
+        log.exception(e)

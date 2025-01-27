@@ -1,18 +1,22 @@
-from typing import Any, Never
-from aiogram import types
-from logger_config import log
 import re
 import datetime
-from own_bot_exceptions import (EmptyValueInputError,
-                                StringInputError,
-                                CronWeekDayInputError,
-                                StringLengthError,
-                                IntInputError)
+
+from typing import Any, Never
+
+from aiogram import types
+
+from logger_config import log
+from own_bot_exceptions import (
+    IntInputError,
+    StringInputError,
+    StringLengthError,
+    EmptyValueInputError,
+    CronWeekDayInputError,
+)
 
 
 def verify_string_as_filename(input_string: str) -> str:
-    """
-    Асинхронно проверяет строку на возможность использования её в качестве имени файла.
+    """Асинхронно проверяет строку на возможность использования её в качестве имени файла.
     Вызывает исключение ValueError, если строка содержит недопустимые символы
     или не соответствует правилам именования файлов.
     """
@@ -39,12 +43,12 @@ def verify_string_as_filename(input_string: str) -> str:
         *(f"COM{i}" for i in range(1, 10)),
         *(f"LPT{i}" for i in range(1, 10)),
     }
-    base_name = input_string.split('.')[0].upper()  # Учитываем только базовое имя (до расширения)
+    base_name = input_string.split(".")[0].upper()  # Учитываем только базовое имя (до расширения)
     if base_name in reserved_names:
         raise StringInputError(f"Строка зарезервирована в Windows: {base_name}")
 
     # Проверка на пробелы или точки в начале и конце имени файла
-    if input_string.strip() != input_string or input_string.endswith('.'):
+    if input_string.strip() != input_string or input_string.endswith("."):
         raise StringInputError("Строка не должна начинаться или заканчиваться пробелами или точками.")
     return input_string
 
@@ -61,12 +65,11 @@ def verify_integer(number: Any) -> int:
     try:
         return int(number)
     except ValueError:
-        raise IntInputError(f'Неверно введено число: {number!r}.')
+        raise IntInputError(f"Неверно введено число: {number!r}.")
 
 
 def verify_string_length(input_string: str | None, str_length: int) -> str | None:
-    """
-    Вызывает исключение если строка превышает длину в str_length символов.
+    """Вызывает исключение если строка превышает длину в str_length символов.
     """
     if not input_string:
         return None
@@ -89,11 +92,11 @@ def verify_cron_day_of_week(day_of_week: str) -> str:
 
 def list_of_tuples_to_str(list_of_tuples: list[Any]) -> str:
     """Приведение списка кортежей к строке"""
-    return '\n\n'.join(' | '.join(map(str, row)) for row in list_of_tuples)
+    return "\n\n".join(" | ".join(map(str, row)) for row in list_of_tuples)
 
 
 def get_telegram_data_dict(message: types.Message) -> dict:
-    """ Получение данных telegram """
+    """Получение данных telegram"""
     try:
         user_telegram_data = get_flat_dict(message)
         log.debug("Данные telegram для пользователя {user} успешно получены.", user=message.from_user.id)
@@ -132,17 +135,17 @@ def get_flat_dict(data_object: object) -> dict:
 
 def get_min_telegram_data(message: types.Message, user_id: int) -> dict:
     """Получение минимального набора данных telegram"""
-    return {'from_user': {'id': message.from_user.id,
-                          'first_name': message.from_user.first_name,
-                          'last_name': message.from_user.last_name,
-                          'username': message.from_user.username,
+    return {"from_user": {"id": message.from_user.id,
+                          "first_name": message.from_user.first_name,
+                          "last_name": message.from_user.last_name,
+                          "username": message.from_user.username,
                           },
-            'date': message.date.timestamp(),
-            'text': message.text,
-            'user_id': user_id,
+            "date": message.date.timestamp(),
+            "text": message.text,
+            "user_id": user_id,
             }
 
 
 def should_be_never_called() -> Never:
-    """Функция не должна вызываться """
+    """Функция не должна вызываться"""
     raise AssertionError("Вызвана функция should_be_never_called.")

@@ -1,16 +1,17 @@
+from email import encoders
+from pathlib import Path
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+
+import aiosmtplib
+
 from aiogram import types
+
+from config import init_today, mail_server_token
 from classes.user import User
 from logger_config import log
 from own_bot_exceptions import UserDoesNotExistError
-import aiosmtplib
-from email import encoders
-from email.mime.base import MIMEBase
-from email.mime.multipart import MIMEMultipart
-from pathlib import Path
 from settings.mail_sender_config import mail_smpt_host, mail_smpt_port, mail_sender_address
-from config import mail_server_token, init_today
-
-
 
 
 async def user_auth(message: types.Message) -> User | bool:
@@ -19,10 +20,10 @@ async def user_auth(message: types.Message) -> User | bool:
     try:
         user = await User.auth(message.from_user.id)
     except UserDoesNotExistError:
-        log.warning('Попытка доступа к команде '
-                    '{command_name} пользователем: '
-                    '{full_name}, '
-                    'telegram_id={id}.',
+        log.warning("Попытка доступа к команде "
+                    "{command_name} пользователем: "
+                    "{full_name}, "
+                    "telegram_id={id}.",
                     command_name=command_name,
                     full_name=message.from_user.full_name,
                     id=message.from_user.id)
@@ -43,20 +44,20 @@ async def send_email(receivers: tuple, files: tuple) -> bool:
     for receiver in receivers:
         try:
             mail_message = MIMEMultipart()
-            mail_message['From'] = from_address
-            mail_message['To'] = receiver
-            mail_message['Subject'] = f'send files {Path(files[0]).name}-{today}'
+            mail_message["From"] = from_address
+            mail_message["To"] = receiver
+            mail_message["Subject"] = f"send files {Path(files[0]).name}-{today}"
 
             for file in files:
                 if Path(file).is_file():
                     filename = Path(file).name
-                    ctype = 'application/octet-stream'
-                    maintype, subtype = ctype.split('/', 1)
-                    with open(file, 'rb') as fp:
+                    ctype = "application/octet-stream"
+                    maintype, subtype = ctype.split("/", 1)
+                    with open(file, "rb") as fp:
                         mime_file = MIMEBase(maintype, subtype)
                         mime_file.set_payload(fp.read())
                         encoders.encode_base64(mime_file)
-                    mime_file.add_header('Content-Disposition', 'attachment', filename=filename)
+                    mime_file.add_header("Content-Disposition", "attachment", filename=filename)
                     mail_message.attach(mime_file)
 
             await aiosmtplib.send(
@@ -65,7 +66,7 @@ async def send_email(receivers: tuple, files: tuple) -> bool:
                 port=mail_smpt_port,
                 username=from_address,
                 password=password,
-                use_tls=True
+                use_tls=True,
             )
             log.info("Письмо отправлено: {receiver}.", receiver=receiver)
 

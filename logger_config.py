@@ -1,6 +1,7 @@
+import os
+
 from loguru import logger
 
-import os
 from config import BaseDIR
 
 console_format = "<green>{time:HH:mm:ss}</green> | " \
@@ -20,7 +21,7 @@ logger.add(
     sink=lambda msg: print(msg, end=""),
     level="DEBUG",
     colorize=True,
-    format=console_format
+    format=console_format,
 )
 
 # Вывод логов в JSON-файл с ротацией и сжатием

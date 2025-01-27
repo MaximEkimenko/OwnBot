@@ -1,7 +1,8 @@
 from aiogram import Bot, types
-from handlers.user_commands import handler_go
+
 from logger_config import log
 from utils.handlers_utils import send_email
+from handlers.user_commands import handler_go
 
 
 async def schedule_send_reminder(bot: Bot, telegram_id: int, task_text: str) -> None:
@@ -11,14 +12,14 @@ async def schedule_send_reminder(bot: Bot, telegram_id: int, task_text: str) -> 
 
 async def schedule_every_day_report(bot: Bot, telegram_id: int) -> None:
     """Функция создания выгрузки с отчётом по расписанию"""
-    user = types.User(id=telegram_id, first_name='username',
+    user = types.User(id=telegram_id, first_name="username",
                       is_bot=False)
-    chat = types.Chat(id=telegram_id, type='private')
+    chat = types.Chat(id=telegram_id, type="private")
     message = types.Message.model_construct(from_user=user,
                                             chat=chat,
                                             date=0,
                                             message_id=1,
-                                            text='scheduled_go_handler',
+                                            text="scheduled_go_handler",
                                             )
     try:
         # TODO V1.0 выбирать handler отправки отчёта в зависимости от условия. Условие определяет пользователь.

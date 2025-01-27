@@ -3,15 +3,12 @@
 #  Файл заменён indicators.json
 #  Удалить в случае не надобности
 # имена показателей
-from pathlib import Path
-from config import BaseDIR
-import json
 
 # Показатели на основе заполнения описания в задаче todoist:
 # словарь соответствия названия проекта todoist буквы в описании задачи и названия показателя
 projects_keys = {
     "Study": {"B": "book", "A": "audiobook", "V": "video"},
-    "Wealth": {"M": "add_income", "P": "poms"}
+    "Wealth": {"M": "add_income", "P": "poms"},
 }
 # Пример использования:
 # В описании к задаче ставится соответствующего проекта литерал и численное значение показателя без пробелов: A30.

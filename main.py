@@ -1,12 +1,13 @@
 import asyncio
+
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums.parse_mode import ParseMode
 
 from config import settings, set_bot_commands
-from logger_config import log
-
 from handlers import router as main_router
+from logger_config import log
+from middlewares.middlewares import AuthMiddleware
 from utils.scheduler_utils.setup_scheduler import setup_scheduler
 
 # TODO V1.0:
@@ -23,13 +24,15 @@ from utils.scheduler_utils.setup_scheduler import setup_scheduler
 
 
 bot = Bot(token=settings.BOT_TOKEN,
-          default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+          default=DefaultBotProperties(parse_mode=ParseMode.HTML),
           )
 
 
 async def on_startup():  # функция выполняется при запуске бота
     await bot.send_message(chat_id=settings.SUPER_USER_TG_ID, text="Бот вышел online.")
     log.info("Бот запушен.")
+    # запуск планировщика
+    await setup_scheduler(bot=bot)
 
 
 async def on_shutdown():
@@ -45,9 +48,9 @@ async def main():
     dp.shutdown.register(on_shutdown)
     await bot.delete_webhook(True)
     await set_bot_commands(bot)  # установка команд
-    await setup_scheduler(bot=bot)  # настройка расписания
+    dp.update.middleware(AuthMiddleware())  # добавление middleware
     await dp.start_polling(bot)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())

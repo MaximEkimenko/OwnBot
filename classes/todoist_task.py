@@ -1,9 +1,12 @@
+# ruff: noqa
 from datetime import datetime
-# TODO NotImplemented
+
+# TODO NotImplemented DELETE AFTER TESTS
 
 
 class TodoistTask:
     """Задача Todoist"""
+
     def __init__(self, task: str,
                  project: str,
                  labels: str | None,

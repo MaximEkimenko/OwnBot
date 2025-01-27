@@ -1,11 +1,19 @@
+"""Основной конфиг приложения."""
+import datetime
+
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
 from aiogram import Bot
 from aiogram.types import BotCommand
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pathlib import Path
-import datetime
+
+from settings import timezones
 
 
 class Settings(BaseSettings):
+    """Настройки приложения."""
+
     BASE_DIR: Path = Path(__file__).parent
     DB_NAME: str
     BOT_TOKEN: str
@@ -14,8 +22,9 @@ class Settings(BaseSettings):
     MAIL_SERVER_TOKEN: str
 
     @property
-    def db_url(self):
-        return rf'sqlite+aiosqlite:///{self.BASE_DIR}/{self.DB_NAME}'
+    def db_url(self) -> str:
+        """Url доступа к БД."""
+        return rf"sqlite+aiosqlite:///{self.BASE_DIR}/{self.DB_NAME}"
 
     model_config = SettingsConfigDict(env_file=f"{BASE_DIR}/.env", case_sensitive=False)
 
@@ -23,19 +32,28 @@ class Settings(BaseSettings):
 settings = Settings()
 BaseDIR = settings.BASE_DIR
 mail_server_token = settings.MAIL_SERVER_TOKEN
-TIME_ZONE = 6
+TIMEZONE = timezones.ASIA_OMSK
+local_timezone = ZoneInfo(TIMEZONE)
+
 
 # TODO найти лучшее решение передачи даты начала отчёта по умолчанию
 first_day_to_report = datetime.date(year=2024, month=1, day=1)
 
 
 def init_today() -> datetime:
-    """Получение сегодня"""
-    return datetime.date.today() - datetime.timedelta(days=0)
+    """Получение сегодня."""
+    current_date = datetime.datetime.now(tz=local_timezone).date()
+    return current_date - datetime.timedelta(days=0)
 
 
-async def set_bot_commands(bot: Bot):
-    """Установка команд в меню клиента приложения телеграм"""
+def init_timezone_offset() -> int:
+    """Получение timezone смещения от UTC в часах."""
+    now = datetime.datetime.now(tz=local_timezone)
+    return int(now.utcoffset().seconds / (60 * 60))
+
+
+async def set_bot_commands(bot: Bot) -> None:
+    """Установка команд в меню клиента приложения телеграм."""
     commands = [BotCommand(command="/go", description="Выполнить расчёт, получить отчёт."),
                 BotCommand(command="/tasksget", description="Получение списка всех запланированных задач."),
                 BotCommand(command="/db", description="Отправка копии БД на электронную почту"),
@@ -44,4 +62,5 @@ async def set_bot_commands(bot: Bot):
 
 
 if __name__ == "__main__":
-    print(settings)
+    pass
+

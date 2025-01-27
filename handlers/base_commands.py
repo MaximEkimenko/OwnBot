@@ -1,5 +1,7 @@
 from aiogram import Router, types
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import Command, CommandStart
+
+from classes.user import User
 
 router = Router(name=__name__)
 
@@ -10,5 +12,5 @@ async def handle_start(message: types.Message):
 
 
 @router.message(Command("help"))
-async def handle_help(message: types.Message):
+async def handle_help(message: types.Message, user: User):
     """Инструкция пользователя"""

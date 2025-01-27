@@ -1,17 +1,21 @@
 import json
+
 from pathlib import Path
 
-import enums
 from aiogram import types
+
+import enums
+
 from config import BaseDIR
 from logger_config import log
 from own_bot_exceptions import StringLengthError
+from utils.common_utils import verify_string_length, should_be_never_called
 from settings.mail_sender_config import files, receivers
-from utils.common_utils import (verify_string_length,
-                                should_be_never_called)
-from utils.scheduler_utils.params_validation import validate_task_type, validate_day_of_week, \
-    validate_cron_hour_minute_integer
-
+from utils.scheduler_utils.params_validation import (
+    validate_task_type,
+    validate_day_of_week,
+    validate_cron_hour_minute_integer,
+)
 
 # TODO V1.0
 #  добавить отчёты по имени показателя в расписание при выборе task_param при task_type = REPORT
@@ -21,19 +25,19 @@ async def validate_input_create_scheduler_params(message: types.Message, task_el
     """Проверка ввода данных планирования задачи создание параметров"""
     task_type = await validate_task_type(message, task_elements[1])
     if task_type is None:
-        return
+        return None
 
     day_of_week = await validate_day_of_week(message, task_elements[2])
     if day_of_week is None:
-        return
+        return None
 
     hour = await validate_cron_hour_minute_integer(message, task_elements[3])
     if hour is None:
-        return
+        return None
 
     minute = await validate_cron_hour_minute_integer(message, task_elements[4])
     if minute is None:
-        return
+        return None
 
     task_kwargs = await create_task_kwargs(message, task_type, task_elements[5])
     if task_kwargs is None:
@@ -60,7 +64,7 @@ async def create_task_kwargs(message: types.Message, task_type, task_param: str)
             except StringLengthError as e:
                 await message.answer(e.args[0])
                 log.warning("Ввод слишком длинного текста. {errors!r}", errors=e.args[0])
-                return
+                return None
 
         case enums.TaskType.REPORT:
             if task_param == "full":
@@ -69,10 +73,9 @@ async def create_task_kwargs(message: types.Message, task_type, task_param: str)
             #  elif task_param = имя_показателя:
             #  вызывается функция_которая_сравнивает_task_param_и_все_показатели_возвращая_bool:
             #  в kwargs передаётся имя показателя для выбора хендлера телеграм отправки отчёта
-            else:
-                await message.answer(f"Неверно введён параметр вида отчёта {task_param!r}.")
-                log.warning("Неверно введён параметр для получения отчёта {task_param!r}.", task_param=task_param)
-                return
+            await message.answer(f"Неверно введён параметр вида отчёта {task_param!r}.")
+            log.warning("Неверно введён параметр для получения отчёта {task_param!r}.", task_param=task_param)
+            return None
 
         case enums.TaskType.EMAIL:
             return await create_email_task_kwargs(message, task_param)
@@ -95,8 +98,8 @@ async def create_email_task_kwargs(message: types.Message, task_param: str) -> d
         except Exception as e:
             await message.answer(f"Ошибка заполнения файла {BaseDIR / Path('sender.json')!r}.")
             log.error("Ошибка заполнения файла sender.json пользователем {user!r}.", user=message.from_user.id, exc_info=e)
-            return
+            return None
 
     await message.answer(f"Неверно введён параметр отправки письма {task_param!r}.")
     log.warning("Неверно введён параметр для получения отчёта {task_param!r}.", task_param=task_param)
-    return
+    return None

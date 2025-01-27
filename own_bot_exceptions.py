@@ -13,6 +13,9 @@ class IntInputError(ValueError):
 class UserDoesNotExistError(ValueError):
     """Исключение для несуществующего пользователя"""
 
+    def __init__(self, telegram_id):
+        super().__init__(f"Зарегистрированного пользователя с {telegram_id} не существует.")
+
 
 class CronWeekDayInputError(ValueError):
     """Исключение для некорректного ввода значения интервалов cron day_of_week"""

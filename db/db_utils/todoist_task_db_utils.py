@@ -1,28 +1,30 @@
-from sqlalchemy import select, or_, func, and_
-from db.database import connection
-from db.models import TodoistTask
-from sqlalchemy.ext.asyncio import AsyncSession
+"""Утилиты работы с БД для записей полученных из todoist api"""
+from collections.abc import Sequence
+
+from sqlalchemy import or_, and_, func, text, select
 from sqlalchemy.exc import IntegrityError
-from todoist_api.todoist_data import get_todoist_data
-from logger_config import log
-from typing import Sequence
-from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from config import init_today
+from db.models import TodoistTask
+from db.database import connection
+from logger_config import log
+from todoist_api.todoist_data import get_todoist_data
 
 
 @connection
-async def save_todoist_tasks(*, session: AsyncSession, user_id: int, todoist_token: str) -> str:
-    """Сохранение в БД данных todoist"""
+async def save_todoist_tasks(*, session: AsyncSession, user_id: int, todoist_token: str) -> str | None:
+    """Сохранение в БД данных todoist."""
     # данные todoist
     today = init_today()
     todoist_data = await get_todoist_data(todoist_token)
-    result_string = ''
+    result_string = ""
     if not todoist_data:
-        return 'Ошибка получения данных todoist, проверьте верность token.'
+        return None
 
     # добавление FK поля владельца
     for line in todoist_data:
-        line.update({'user_id': user_id})
+        line.update({"user_id": user_id})
     # данные БД
     stmt_length_limit = len(todoist_data) * 2 + 1  # длина списка данных из БД в зависимости от лимита todoist
     stmt = (select(TodoistTask)
@@ -33,14 +35,14 @@ async def save_todoist_tasks(*, session: AsyncSession, user_id: int, todoist_tok
     db_data = [line.to_dict() for line in db_result]
 
     # записи только за сегодня
-    filtered_todoist = [line for line in todoist_data if line['completed_at'].date() == today]
-    filtered_db = [line for line in db_data if line['completed_at'].date() == today]
+    filtered_todoist = [line for line in todoist_data if line["completed_at"].date() == today]
+    filtered_db = [line for line in db_data if line["completed_at"].date() == today]
 
-    db_task_ids = {line['task_item_id'] for line in filtered_db}
+    db_task_ids = {line["task_item_id"] for line in filtered_db}
     # db_descriptions = {line['description'] for line in filtered_db}
 
     # новые записи за сегодня
-    diff_data = [line for line in filtered_todoist if line['task_item_id'] not in db_task_ids]
+    diff_data = [line for line in filtered_todoist if line["task_item_id"] not in db_task_ids]
     # обновлённые записи по описанию
     # TODO рефакторинг после тестов и проверке на практике
     #  убедится, что сценарий когда ежедневные задачи (recurring task с одинаковым task_id)
@@ -57,10 +59,10 @@ async def save_todoist_tasks(*, session: AsyncSession, user_id: int, todoist_tok
             result_string += f'Задачи {[data["task"] for data in diff_data]} успешно сохранены.\n'
             log.success(result_string)
         except IntegrityError as e:
-            log.error('Ошибка БД при сохранении.')
+            log.error("Ошибка БД при сохранении.")
             log.exception(e)
     else:
-        result_string += 'Задачи todoist для добавления отсутствуют.\n'
+        result_string += "Задачи todoist для добавления отсутствуют.\n"
         log.info(result_string)
     # TODO рефакторинг после тестов и проверке на практике
     #  удалить лишнее по результату тестов
@@ -90,19 +92,14 @@ async def save_todoist_tasks(*, session: AsyncSession, user_id: int, todoist_tok
 
 @connection
 async def get_description_todoist_tasks(literal_dict: dict, session: AsyncSession) -> Sequence[TodoistTask]:
-    """Получение задач todoist по словарю литералов за текущий день"""
+    """Получение задач todoist по словарю литералов за текущий день."""
+    # TODO здесь нужен user_id?
     today = init_today()
     conditions = []
-    for project, data_dict in literal_dict.items():
-        for literal in data_dict.keys():
+    for data_dict in literal_dict.values():
+        for literal in data_dict:
             conditions.append(
-                # TODO рефакторинг после тестов и проверке на практике
-                #   Из логики исключено имя проекта
-                #   В логику Не добавлено имя задачи;
-                #   Выборка только по уникальному литералу в регулярном выражении
-                text(f"TodoistTask.description REGEXP '^{literal}[0-9]*$'")
-                # регесп су учётом имени проекта
-                # (TodoistTask.project == project) & text(f"TodoistTask.description REGEXP '^{literal}[a-zA-Z0-9]*$'")
+                text(f"TodoistTask.description REGEXP '^{literal}[0-9]*$'"),
             )
 
     date_condition = func.date(TodoistTask.completed_at) == today
@@ -112,7 +109,7 @@ async def get_description_todoist_tasks(literal_dict: dict, session: AsyncSessio
         result = await session.execute(query)
         tasks = result.scalars().all()
     except IntegrityError as e:
-        log.error('Ошибка БД при получении задач todoist по словарю литералов.', exc_info=e)
+        log.error("Ошибка БД при получении задач todoist по словарю литералов.", exc_info=e)
         raise e
 
     return tasks
@@ -125,14 +122,14 @@ async def get_quantity_todoist_task(project_indicator_dict: dict, session: Async
     conditions = []
     for project, _ in project_indicator_dict.items():
         conditions.append(
-            (TodoistTask.project == project)
+            TodoistTask.project == project,
         )
     date_condition = func.date(TodoistTask.completed_at) == today
 
     query = (
         select(
             TodoistTask.project,
-            func.count(TodoistTask.id).label("project_count")
+            func.count(TodoistTask.id).label("project_count"),
         )
         .where(and_(or_(*conditions), date_condition))
         .group_by(TodoistTask.project)
@@ -142,7 +139,7 @@ async def get_quantity_todoist_task(project_indicator_dict: dict, session: Async
         result = await session.execute(query)
         tasks = result.all()
     except IntegrityError as e:
-        log.error('Ошибка БД при получении задач todoist по словарю проектов.', exc_info=e)
+        log.error("Ошибка БД при получении задач todoist по словарю проектов.", exc_info=e)
         raise e
 
     return tasks

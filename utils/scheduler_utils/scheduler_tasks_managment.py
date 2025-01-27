@@ -1,14 +1,14 @@
-import datetime
-
-from utils.scheduler_utils.scheduler_manager import scheduler
-from utils.scheduler_utils.scheduler_actions import (schedule_send_reminder, schedule_every_day_report,
-                                                     schedule_send_mail)
 from logger_config import log
+from utils.scheduler_utils.scheduler_actions import (
+    schedule_send_mail,
+    schedule_send_reminder,
+    schedule_every_day_report,
+)
+from utils.scheduler_utils.scheduler_manager import scheduler
 
 
 def add_or_update_scheduler_task(schedule_params: dict, user_id: int):
     """Добавление / обновление задачи по расписанию при изменении, добавлении данных задачи пользователем"""
-
     # словарь стратегий планирования в зависимости от типа задачи
     task_type = schedule_params["task_type"]
     task_kwargs = schedule_params["task_kwargs"]
@@ -32,8 +32,9 @@ def add_or_update_scheduler_task(schedule_params: dict, user_id: int):
         hour=schedule_params["hour"],
         minute=schedule_params["minute"],
         id=task_id,
-        misfire_grace_time=60 * 60,
-        kwargs=task_kwargs
+        misfire_grace_time=60 * 2,
+        kwargs=task_kwargs,
+        jobstore="default",
     )
     log.info("Задача:{task_id} запланирована успешно для пользователя:{user}, "
              "тип:{task_type}.",

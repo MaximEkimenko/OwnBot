@@ -1,17 +1,19 @@
-import enums
-from sqlalchemy import select, exists, update, delete
+"""Утилиты работы с БД для задач по расписанию."""
+from sqlalchemy import delete, exists, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from db.database import connection
-from db.models import ScheduleTask
 
+import enums
+
+from db.models import ScheduleTask
+from db.database import connection
 from logger_config import log
 
 
 @connection
 async def is_schedule_exists(task_name: str, user_id: int, session: AsyncSession) -> bool:
-    """Проверка наличия напоминания"""
+    """Проверка наличия напоминания."""
     stmt = select(exists().where(ScheduleTask.name == task_name,
-                                 ScheduleTask.user_id == user_id
+                                 ScheduleTask.user_id == user_id,
                                  ))
     result = await session.execute(stmt)
     return result.scalar()
@@ -23,7 +25,7 @@ async def save_reminder_data(schedule_params: dict,
                              user_id: int,
                              task_type: enums.TaskType,
                              session: AsyncSession) -> bool:
-    """Сохранение параметров напоминания"""
+    """Сохранение параметров напоминания."""
     schedule_name = schedule_params.get("id")
     stmt = select(exists().where(ScheduleTask.name == schedule_name,
                                  ScheduleTask.user_id == user_id))
@@ -33,20 +35,21 @@ async def save_reminder_data(schedule_params: dict,
         log.debug("Напоминание {name} уже существует.", name=schedule_name)
         return False
     try:
-        data = {'schedule_params': schedule_params,
+        data = {"schedule_params": schedule_params,
                 "user_telegram_data": user_telegram_data,
                 "user_id": user_id,
                 "task_type": task_type,
-                "name": schedule_params["id"]
+                "name": schedule_params["id"],
                 }
         report = ScheduleTask(**data)
         session.add(report)
         await session.commit()
-        log.debug('Данные Напоминания сохранены {name}.', name=schedule_name)
+        log.debug("Данные Напоминания сохранены {name}.", name=schedule_name)
     except Exception as e:
         await session.rollback()
-        log.error(f'Ошибка при сохранении напоминания.', exc_info=e)
+        log.error("Ошибка при сохранении напоминания.", exc_info=e)
         log.exception(e)
+        raise
 
     return True
 
@@ -56,9 +59,9 @@ async def update_reminder_data(session: AsyncSession,
                                schedule_params: dict,
                                user_telegram_data: dict,
                                user_id: int,
-                               task_type: enums.TaskType
+                               task_type: enums.TaskType,
                                ) -> bool:
-    """Обновление параметров напоминания"""
+    """Обновление параметров напоминания."""
     # обновление данных
     task_name = schedule_params["id"]
     stmt = (
@@ -68,18 +71,18 @@ async def update_reminder_data(session: AsyncSession,
         .values(
             schedule_params=schedule_params,
             user_telegram_data=user_telegram_data,
-            task_type=task_type
+            task_type=task_type,
         )
     )
     try:
         await session.execute(stmt)
         await session.commit()
         log.debug("Успешное обновление {task} записи в БД.", task=task_name)
+        return True
     except Exception as e:
         log.error("Ошибка записи данных в БД.", exc_info=e)
+        log.exception(e)
         return False
-
-    return True
 
 
 @connection
@@ -87,7 +90,7 @@ async def delete_reminder_data(session: AsyncSession,
                                task_name: str,
                                user_id: int,
                                ) -> bool:
-    """Удаление напоминания"""
+    """Удаление напоминания."""
     stmt = (
         delete(ScheduleTask).where(ScheduleTask.user_id == user_id,
                                    ScheduleTask.name == task_name)
@@ -104,8 +107,8 @@ async def delete_reminder_data(session: AsyncSession,
 
 
 @connection
-async def get_scheduler_params(user_id: int, session: AsyncSession):
-    """Получение всех запланированных задач пользовался"""
+async def get_scheduler_params(user_id: int, session: AsyncSession) -> list:
+    """Получение всех запланированных задач пользовался."""
     stmt = select(ScheduleTask).where(ScheduleTask.user_id == user_id)
     result = await session.execute(stmt)
     results = result.scalars().all()
@@ -113,8 +116,8 @@ async def get_scheduler_params(user_id: int, session: AsyncSession):
 
 
 @connection
-async def get_all_users_scheduler_params(session: AsyncSession):
-    """Получение всех запланированных задач пользовался"""
+async def get_all_users_scheduler_params(session: AsyncSession) -> list:
+    """Получение всех запланированных задач пользовался."""
     stmt = select(ScheduleTask)
     result = await session.execute(stmt)
     results = result.scalars().all()
