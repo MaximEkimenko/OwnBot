@@ -1,4 +1,8 @@
-#  mail_server_token заполняется в .env файле
+"""Конфигурационный файл для модуля рассылки по почте.
+
+Mail_server_token заполняется в .env файле.
+"""
+
 from pathlib import Path
 
 from config import BaseDIR

@@ -1,3 +1,4 @@
+"""Обработка команд управления задачами по расписанию."""
 from logger_config import log
 from utils.scheduler_utils.scheduler_actions import (
     schedule_send_mail,
@@ -7,8 +8,8 @@ from utils.scheduler_utils.scheduler_actions import (
 from utils.scheduler_utils.scheduler_manager import scheduler
 
 
-def add_or_update_scheduler_task(schedule_params: dict, user_id: int):
-    """Добавление / обновление задачи по расписанию при изменении, добавлении данных задачи пользователем"""
+def add_or_update_scheduler_task(schedule_params: dict, user_id: int) -> None:
+    """Добавление / обновление задачи по расписанию при изменении, добавлении данных задачи пользователем."""
     # словарь стратегий планирования в зависимости от типа задачи
     task_type = schedule_params["task_type"]
     task_kwargs = schedule_params["task_kwargs"]
@@ -42,7 +43,7 @@ def add_or_update_scheduler_task(schedule_params: dict, user_id: int):
 
 
 def delete_scheduler_task(task_name: str, user_id: int) -> None:
-    """Удаление задачи по расписанию"""
+    """Удаление задачи по расписанию."""
     task_id = task_name + str(user_id)
     job = scheduler.get_job(task_id)
     if job:
@@ -51,13 +52,17 @@ def delete_scheduler_task(task_name: str, user_id: int) -> None:
              user=user_id, task_id=task_id)
 
 
-def get_planned_jobs(db_tasks) -> list:
-    """Все запланированные задачи"""
+def get_planned_jobs(db_tasks: list) -> list:
+    """Все запланированные задачи."""
     # список id задач пользователя из БД
     tasks_id = [str(task[0]) + str(task[1]) for task in db_tasks]
     # запланированные задачи пользователя
-    jobs = [(job.id[:-1],
-             str(job.trigger),
-             job.next_run_time.strftime("%d.%m.%Y %H:%M:%S")) for job in scheduler.get_jobs()
-            if job.id in tasks_id]
-    return jobs
+    return [
+        (
+            job.id[:-1],
+            str(job.trigger),
+            job.next_run_time.strftime("%d.%m.%Y %H:%M:%S"),
+        )
+        for job in scheduler.get_jobs()
+        if job.id in tasks_id
+            ]

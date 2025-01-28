@@ -1,3 +1,4 @@
+"""Конфигурация отчёта."""
 # сортировка
 preferred_order = ["book",
                    "audiobook",
@@ -23,5 +24,5 @@ preferred_colors = {"book": "green", "audiobook": "green", "video": "green", "st
                     "social_done": "cyan ",
                     }
 
-# частота метки даты
+# частота метки даты на оси X
 date_label_freq = 25

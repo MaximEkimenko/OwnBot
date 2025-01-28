@@ -1,12 +1,11 @@
-from aiogram import Router, types
+"""Команды пользователя."""
+from aiogram import Bot, Router, types
 from aiogram.filters import Command
 from aiogram.utils.chat_action import ChatActionSender
 
 import enums
 
 from classes.user import User
-
-# from utils.scheduler_utils.scheduler_actions import schedule_send_mail
 from logger_config import log
 from own_bot_exceptions import IntInputError, StringInputError
 from utils.common_utils import get_bot_for_schedule, verify_string_as_filename
@@ -16,25 +15,17 @@ router = Router(name=__name__)
 
 
 @router.message(Command("savetd"))
-async def handler_savetd(message: types.Message, user: User):
-    """Обработка ручного запуска сохранения todoist данных"""
-    # user = await user_auth(message)
-    # if user is False:
-    #     return
-
+async def handler_savetd(message: types.Message, user: User) -> None:
+    """Обработка ручного запуска сохранения todoist данных."""
     await message.answer(text="Начало выгрузки и сохранения задач todoist...")
     result = await user.save_todoist_data()
     await message.answer(result)
 
 
 @router.message(Command("ind"))
-async def handler_ind(message: types.Message,  schedule_bot=None, user: User = None) -> bool:
+async def handler_ind(message: types.Message,  schedule_bot: Bot = None, user: User = None) -> bool:
     """Обработка ручного запуска расчёта показателей todoist данных."""
-    # user = await user_auth(message)
-    # if user is False:
-    #     return
     # проверка задачи по расписанию
-
     bot = get_bot_for_schedule(message, schedule_bot)
     user_id = message.from_user.id
     await bot.send_message(chat_id=user_id, text="Начало обработки данных...")
@@ -60,14 +51,10 @@ async def handler_ind(message: types.Message,  schedule_bot=None, user: User = N
 
 
 @router.message(Command("report_create"))
-async def handler_report_create(message: types.Message, schedule_bot=None, user: User = None):
-    """Команда получения отчётов"""
-    # TODO REFACTOR
-    # user = await user_auth(message)
-    # if user is False:
-    #     return
-
-    # проверка задачи по расписанию
+async def handler_report_create(message: types.Message,
+                                schedule_bot: Bot = None, user: User = None) -> None:
+    """Команда получения отчётов."""
+    # TODO REFACTOR all function
     bot = get_bot_for_schedule(message=message, schedule_bot=schedule_bot)
     user_id = message.from_user.id
 
@@ -108,11 +95,8 @@ async def handler_report_create(message: types.Message, schedule_bot=None, user:
 
 
 @router.message(Command("update"))
-async def handler_update(message: types.Message, user: User):
-    """Команда для ручного обновления показателей"""
-    # user = await user_auth(message)
-    # if user is False:
-    #     return
+async def handler_update(message: types.Message, user: User) -> None:
+    """Команда для ручного обновления показателей."""
     command_elements = message.text.split()[1:]  # строка параметров
     # валидация ввода
     if len(command_elements) % 2 != 0:
@@ -165,11 +149,8 @@ async def handler_update(message: types.Message, user: User):
 
 
 @router.message(Command("go"))
-async def handler_go(message: types.Message, user: User, schedule_bot=None):
-    """Выгрузка todoist, сохранение в БД, расчёт показателей, генерация отчёта, отправка отчёта"""
-    # user = await user_auth(message)
-    # if user is False:
-    #     return
+async def handler_go(message: types.Message, user: User, schedule_bot: Bot = None) -> None:
+    """Выгрузка todoist, сохранение в БД, расчёт показателей, генерация отчёта, отправка отчёта."""
     # расчёт показателей
     is_ok_download_and_calculation = await handler_ind(message, schedule_bot, user=user)
     if is_ok_download_and_calculation is False:
@@ -181,11 +162,8 @@ async def handler_go(message: types.Message, user: User, schedule_bot=None):
 
 
 @router.message(Command("db"))
-async def handler_db(message: types.Message, user: User):
-    """Отправка копии файла БД на электронную почту"""
-    # user = await user_auth(message)
-    # if user is False:
-    #     return
+async def handler_db(message: types.Message, user: User) -> None:
+    """Отправка копии файла БД на электронную почту."""
     # TODO добавить обработку варианта заполнения через sender.json
     from settings.mail_sender_config import files, receivers
     try:

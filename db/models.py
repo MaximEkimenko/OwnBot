@@ -1,3 +1,4 @@
+"""Модели OwnBot."""
 from datetime import datetime
 
 from sqlalchemy import DATE, BIGINT, TIMESTAMP, ForeignKey, LargeBinary, UniqueConstraint
@@ -10,7 +11,7 @@ from .database import Base
 
 
 class UserModel(Base):
-    """Модель пользователя"""
+    """Модель пользователя."""
 
     telegram_id: Mapped[int] = mapped_column(BIGINT, unique=True)
     todoist_token: Mapped[str] = mapped_column(nullable=True)
@@ -24,7 +25,7 @@ class UserModel(Base):
 
 
 class Indicator(Base):
-    """Модель показателей"""
+    """Модель показателей."""
 
     date: Mapped[datetime] = mapped_column(DATE)
     user_id: Mapped[int] = mapped_column(ForeignKey("usermodel.id"))
@@ -42,7 +43,7 @@ class Indicator(Base):
 
 
 class IndicatorParams(Base):
-    """Модель параметров для расчёта показателей"""
+    """Модель параметров для расчёта показателей."""
 
     indicator_name: Mapped[str]  # имя показателя
     # имя проекта для реализации расчёта по имени проекта
@@ -84,7 +85,7 @@ class IndicatorParams(Base):
 
 
 class ScheduleTask(Base):
-    """Модель задания по расписанию"""
+    """Модель задания по расписанию."""
 
     name: Mapped[str] = mapped_column()
     user_id: Mapped[int] = mapped_column(ForeignKey("usermodel.id"))
@@ -101,7 +102,7 @@ class ScheduleTask(Base):
 
 
 class Report(Base):
-    """Модель отчётов"""
+    """Модель отчётов."""
 
     name: Mapped[str] = mapped_column(unique=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("usermodel.id"))
@@ -112,12 +113,13 @@ class Report(Base):
 
     user: Mapped[UserModel] = relationship("UserModel", back_populates="reports")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Имя таблицы в !r."""
         return self.__tablename__
 
 
 class TodoistTask(Base):
-    """Модель задач Todoist"""
+    """Модель задач Todoist."""
 
     user_id: Mapped[int] = mapped_column(ForeignKey("usermodel.id"))
     task_item_id: Mapped[int]  # уникальный ключ item записи todoist api
@@ -133,5 +135,6 @@ class TodoistTask(Base):
 
     user: Mapped[UserModel] = relationship("UserModel", back_populates="todoist_tasks")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Имя таблицы в !r."""
         return self.__tablename__

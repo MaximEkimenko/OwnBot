@@ -1,4 +1,7 @@
+"""Настройка модуля расписания при запуске бота."""
 from collections.abc import Callable
+
+from aiogram import Bot
 
 from logger_config import log
 from db.db_utils.scheduler_db_utils import get_all_users_scheduler_params
@@ -11,7 +14,7 @@ from utils.scheduler_utils.scheduler_manager import scheduler
 
 
 def set_job(action_func: Callable, settings: dict, job_kwargs: dict) -> None:
-    """Добавление задачи в расписание"""
+    """Добавление задачи в расписание."""
     scheduler.add_job(action_func,
                       replace_existing=True,
                       **settings,
@@ -21,8 +24,8 @@ def set_job(action_func: Callable, settings: dict, job_kwargs: dict) -> None:
                       )
 
 
-async def setup_scheduler(bot):
-    """Настройщик расписания при запуске бота"""
+async def setup_scheduler(bot: Bot) -> None:
+    """Настройщик расписания при запуске бота."""
     tasks = await get_all_users_scheduler_params()  # все задачи из БД
     reminder_settings = []
     report_settings = []

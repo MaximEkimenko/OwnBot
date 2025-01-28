@@ -1,3 +1,4 @@
+"""Валидация параметров задач по расписанию."""
 from aiogram import types
 
 import enums
@@ -8,7 +9,7 @@ from utils.common_utils import verify_integer, verify_cron_day_of_week
 
 
 async def validate_task_type(message: types.Message, task_type_letter: str) -> enums.TaskType | None:
-    """Валидация типа задачи"""
+    """Валидация типа задачи."""
     # словарь перевода команды пользователя в TaskType
     task_type_translate_dict = enums.TaskType.get_task_type_translate_dict()
 
@@ -27,7 +28,7 @@ async def validate_task_type(message: types.Message, task_type_letter: str) -> e
 
 
 async def validate_day_of_week(message: types.Message, day_input: str) -> str | None:
-    """Валидация интервала дней недели в виде cron"""
+    """Валидация интервала дней недели в виде cron."""
     try:
         return verify_cron_day_of_week(day_input)
     except CronWeekDayInputError as e:
@@ -37,7 +38,7 @@ async def validate_day_of_week(message: types.Message, day_input: str) -> str | 
 
 
 async def validate_cron_hour_minute_integer(message: types.Message, value: str) -> int | None:
-    """Валидация часов и минут cron"""
+    """Валидация часов и минут cron."""
     try:
         return verify_integer(value)
 

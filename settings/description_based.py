@@ -1,3 +1,4 @@
+"""Конфигурационный файл для методики расчёта на основе todoist description."""
 # TODO
 #  NotImplemented
 #  Файл заменён indicators.json

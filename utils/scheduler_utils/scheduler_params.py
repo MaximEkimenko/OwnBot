@@ -1,3 +1,4 @@
+"""Параметры задач по расписанию."""
 import json
 
 from pathlib import Path
@@ -22,7 +23,7 @@ from utils.scheduler_utils.params_validation import (
 
 
 async def validate_input_create_scheduler_params(message: types.Message, task_elements: list) -> dict | None:
-    """Проверка ввода данных планирования задачи создание параметров"""
+    """Проверка ввода данных планирования задачи создание параметров."""
     task_type = await validate_task_type(message, task_elements[1])
     if task_type is None:
         return None
@@ -41,7 +42,7 @@ async def validate_input_create_scheduler_params(message: types.Message, task_el
 
     task_kwargs = await create_task_kwargs(message, task_type, task_elements[5])
     if task_kwargs is None:
-        should_be_never_called()
+        should_be_never_called()  # TODO есть сценарий когда она вызывается при ошибке - найти и обработать.
 
     return {
         "day_of_week": day_of_week,
@@ -52,19 +53,22 @@ async def validate_input_create_scheduler_params(message: types.Message, task_el
     }
 
 
-async def create_task_kwargs(message: types.Message, task_type, task_param: str) -> dict | None:
-    """Создание task_kwargs по task_param"""
+async def create_task_kwargs(message: types.Message,
+                             task_type: enums.TaskType,
+                             task_param: str) -> dict | None:
+    """Создание task_kwargs по task_param."""
     telegram_id = message.from_user.id
     bot = message.bot
     match task_type:
         case enums.TaskType.REMINDER:
             try:
                 task_text = verify_string_length(task_param, 1000)
-                return {"telegram_id": telegram_id, "task_text": task_text, "bot": bot}
             except StringLengthError as e:
                 await message.answer(e.args[0])
                 log.warning("Ввод слишком длинного текста. {errors!r}", errors=e.args[0])
                 return None
+            else:
+                return {"telegram_id": telegram_id, "task_text": task_text, "bot": bot}
 
         case enums.TaskType.REPORT:
             if task_param == "full":
@@ -86,7 +90,7 @@ async def create_task_kwargs(message: types.Message, task_type, task_param: str)
 
 
 async def create_email_task_kwargs(message: types.Message, task_param: str) -> dict | None:
-    """Получение параметров отправки почты в зависимости от task_param"""
+    """Получение параметров отправки почты в зависимости от task_param."""
     if task_param == "conf":
         return {"files": files, "receivers": receivers}
 
@@ -97,7 +101,9 @@ async def create_email_task_kwargs(message: types.Message, task_param: str) -> d
             return {"files": json_content["files"], "receivers": json_content["receivers"]}
         except Exception as e:
             await message.answer(f"Ошибка заполнения файла {BaseDIR / Path('sender.json')!r}.")
-            log.error("Ошибка заполнения файла sender.json пользователем {user!r}.", user=message.from_user.id, exc_info=e)
+            log.error("Ошибка заполнения файла sender.json пользователем {user!r}.",
+                      user=message.from_user.id,
+                      exc_info=e)
             return None
 
     await message.answer(f"Неверно введён параметр отправки письма {task_param!r}.")

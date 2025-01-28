@@ -1,3 +1,4 @@
+"""Базовые команды telegram."""
 from aiogram import Router, types
 from aiogram.filters import Command, CommandStart
 
@@ -7,10 +8,10 @@ router = Router(name=__name__)
 
 
 @router.message(CommandStart())
-async def handle_start(message: types.Message):
-    """Команда старт"""
+async def handle_start(message: types.Message) -> None:
+    """Команда старт."""
 
 
 @router.message(Command("help"))
-async def handle_help(message: types.Message, user: User):
-    """Инструкция пользователя"""
+async def handle_help(message: types.Message, user: User) -> None:
+    """Инструкция пользователя."""

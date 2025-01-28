@@ -1,24 +1,28 @@
-import os
+"""loguru logger config file."""
+
+from pathlib import Path
 
 from loguru import logger
 
 from config import BaseDIR
 
-console_format = "<green>{time:HH:mm:ss}</green> | " \
-                 "<level>{level: <8}</level> | " \
-                 "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - " \
-                 "<level>{message}</level>" \
-                 "<level>{exception}</level>"
+console_format = (
+    "<green>{time:HH:mm:ss}</green> | "
+    "<level>{level: <8}</level> | "
+    "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
+    "<level>{message}</level>"
+    "<level>{exception}</level>"
+                )
 
 LOG_DIR = BaseDIR / "logs"
-if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR)
+if not Path.exists(LOG_DIR):
+    Path.mkdir(LOG_DIR)
 
 logger.remove()  # Удаляем стандартный обработчик (иначе будет дублирование)
 
 # Вывод логов в консоль
 logger.add(
-    sink=lambda msg: print(msg, end=""),
+    sink=lambda msg: print(msg, end=""), # noqa T201
     level="DEBUG",
     colorize=True,
     format=console_format,
@@ -30,12 +34,11 @@ JSON_LOG_FILE = LOG_DIR / "log.json"
 
 logger.add(
     JSON_LOG_FILE,
-    rotation="10 MB",         # Ротация по размеру файла
-    compression="zip",        # Сжатие старых логов
-    level="DEBUG",            # Уровень логирования
-    serialize=True,           # Логи в формате JSON
-    enqueue=True,              # Асинхронная запись
+    rotation="10 MB",  # Ротация по размеру файла
+    compression="zip",  # Сжатие старых логов
+    level="DEBUG",  # Уровень логирования
+    serialize=True,  # Логи в формате JSON
+    enqueue=True,  # Асинхронная запись
 )
 
 log = logger
-

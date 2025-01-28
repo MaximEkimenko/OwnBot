@@ -1,4 +1,4 @@
-"""Утилиты работы с БД для записей полученных из todoist api"""
+"""Утилиты работы с БД для записей полученных из todoist api."""
 from collections.abc import Sequence
 
 from sqlalchemy import or_, and_, func, text, select
@@ -39,16 +39,9 @@ async def save_todoist_tasks(*, session: AsyncSession, user_id: int, todoist_tok
     filtered_db = [line for line in db_data if line["completed_at"].date() == today]
 
     db_task_ids = {line["task_item_id"] for line in filtered_db}
-    # db_descriptions = {line['description'] for line in filtered_db}
 
     # новые записи за сегодня
     diff_data = [line for line in filtered_todoist if line["task_item_id"] not in db_task_ids]
-    # обновлённые записи по описанию
-    # TODO рефакторинг после тестов и проверке на практике
-    #  убедится, что сценарий когда ежедневные задачи (recurring task с одинаковым task_id)
-    #  не могут быть закрыты несколько раз в день (ручные задачи будут иметь другой task_id  пойдут в diff_dict),
-    #  а значит update не нужен
-    # updated_data = [line for line in filtered_todoist if line['description'] not in db_descriptions]
 
     # добавление отличительных данных в БД
     if diff_data:
@@ -64,28 +57,6 @@ async def save_todoist_tasks(*, session: AsyncSession, user_id: int, todoist_tok
     else:
         result_string += "Задачи todoist для добавления отсутствуют.\n"
         log.info(result_string)
-    # TODO рефакторинг после тестов и проверке на практике
-    #  удалить лишнее по результату тестов
-    # обновление данных с изменённым описанием
-    # if updated_data:
-    #     try:
-    #         for data in updated_data:
-    #             stmt = (
-    #                 update(TodoistTask)
-    #                 .where(TodoistTask.user_id == user_id, TodoistTask.task_item_id == data['task_item_id'])
-    #                 .values(description=data['description'])
-    #             )
-    #             await session.execute(stmt)
-    #         await session.commit()
-    #         # result_string += f'Записи {[data["task"] for data in updated_data]} успешно обновлены.\n'
-    #         log.success(result_string)
-    #
-    #     except SQLAlchemyError as e:
-    #         log.error('Ошибка БД при обновлении.')
-    #         log.exception(e)
-    # else:
-    #     result_string += 'Задачи todoist для обновления отсутствуют.\n'
-    #     log.info(result_string)
 
     return result_string
 
@@ -95,12 +66,12 @@ async def get_description_todoist_tasks(literal_dict: dict, session: AsyncSessio
     """Получение задач todoist по словарю литералов за текущий день."""
     # TODO здесь нужен user_id?
     today = init_today()
-    conditions = []
-    for data_dict in literal_dict.values():
-        for literal in data_dict:
-            conditions.append(
-                text(f"TodoistTask.description REGEXP '^{literal}[0-9]*$'"),
-            )
+
+    conditions = [
+        text(f"TodoistTask.description REGEXP '^{literal}[0-9]*$'")
+        for data_dict in literal_dict.values()
+        for literal in data_dict
+    ]
 
     date_condition = func.date(TodoistTask.completed_at) == today
     query = select(TodoistTask).where(and_(or_(*conditions), date_condition))
@@ -110,20 +81,17 @@ async def get_description_todoist_tasks(literal_dict: dict, session: AsyncSessio
         tasks = result.scalars().all()
     except IntegrityError as e:
         log.error("Ошибка БД при получении задач todoist по словарю литералов.", exc_info=e)
-        raise e
+        raise
 
     return tasks
 
 
 @connection
-async def get_quantity_todoist_task(project_indicator_dict: dict, session: AsyncSession):
-    """Получение задач todoist по словарю показателей за текущий день"""
+async def get_quantity_todoist_task(project_indicator_dict: dict, session: AsyncSession) -> Sequence:
+    """Получение задач todoist по словарю показателей за текущий день."""
     today = init_today()
-    conditions = []
-    for project, _ in project_indicator_dict.items():
-        conditions.append(
-            TodoistTask.project == project,
-        )
+    # условия
+    project_conditions = [TodoistTask.project == project for project in project_indicator_dict]
     date_condition = func.date(TodoistTask.completed_at) == today
 
     query = (
@@ -131,7 +99,7 @@ async def get_quantity_todoist_task(project_indicator_dict: dict, session: Async
             TodoistTask.project,
             func.count(TodoistTask.id).label("project_count"),
         )
-        .where(and_(or_(*conditions), date_condition))
+        .where(and_(or_(*project_conditions), date_condition))
         .group_by(TodoistTask.project)
     )
 
@@ -140,6 +108,6 @@ async def get_quantity_todoist_task(project_indicator_dict: dict, session: Async
         tasks = result.all()
     except IntegrityError as e:
         log.error("Ошибка БД при получении задач todoist по словарю проектов.", exc_info=e)
-        raise e
+        raise
 
     return tasks

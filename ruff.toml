@@ -66,9 +66,8 @@ ignore = [
    # TODO убрать на других проектах и использовать anyio как в примере:
    #  https://docs.astral.sh/ruff/rules/blocking-open-call-in-async-function/
    "ASYNC230",  # открытие файлов через anyio
-#   "BLE001",  # запрет обработки исключения Exception
-
-
+   "BLE001",  # запрет обработки исключения Exception
+   "RET503",  # явный вызов return
 ]
 
 [lint.flake8-quotes]
@@ -108,3 +107,6 @@ lines-between-types = 1  # Добавляет одну пустую строку
 
 [lint.pylint]
 max-args = 10  # максимальное колчиество аргументов
+
+[lint.pydocstyle]
+ignore-var-parameters = true

@@ -10,3 +10,5 @@ wheels/
 .venv
 .env
 tst_in_ownbot.py
+.ruff_cache
+progress_tracker.db

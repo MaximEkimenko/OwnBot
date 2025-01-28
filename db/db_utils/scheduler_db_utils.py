@@ -78,11 +78,12 @@ async def update_reminder_data(session: AsyncSession,
         await session.execute(stmt)
         await session.commit()
         log.debug("Успешное обновление {task} записи в БД.", task=task_name)
-        return True
     except Exception as e:
         log.error("Ошибка записи данных в БД.", exc_info=e)
         log.exception(e)
         return False
+    else:
+        return True
 
 
 @connection

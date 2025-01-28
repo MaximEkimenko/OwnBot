@@ -1,3 +1,4 @@
+"""Middlewares."""
 from typing import Any
 from collections.abc import Callable, Awaitable
 
@@ -9,12 +10,13 @@ from utils.handlers_utils import user_auth
 
 
 class AuthMiddleware(BaseMiddleware):
-    """Аутентификация пользователя"""
+    """Проверка и аутентификация пользователя отправляющего сообщения."""
 
     async def __call__(self,
                        handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
                        event: types.Message,
-                       data: dict[str, Any]) -> Any:
+                       data: dict[str, Any]) -> Any:  # noqa ANN401
+        """Вызов middleware."""
         if event.message:
             message: types.Message = event.message
             user = await user_auth(message)
@@ -26,3 +28,5 @@ class AuthMiddleware(BaseMiddleware):
                       user_id=user.telegram_id)
 
             return await handler(event, data)
+
+        return None

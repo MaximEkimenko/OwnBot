@@ -1,3 +1,4 @@
+"""Получение данных из todoist api."""
 import asyncio
 
 from typing import Any
@@ -14,22 +15,21 @@ from logger_config import log
 
 
 async def get_todoist_data(token: str) -> list[dict[str: Any | None]]:
+    """Получение данных API Todoist.
+
+    Для получения выполненных задач используется SYNC API. REST API не умеет работать с
+    is_recurring=True задачами. Ограничение SYNC API - 30 задач за последние сутки.
+    Функция возвращает кортеж из выполненных задач за ТЕКУЩИЙ ДЕНЬ в виде словаря с ключами:
+    (task: содержание задачи, project: проект задачи, label:метка задачи, done_time: дата время выполнения задачи,
+    description: описание задачи).
+    """
     try:
-        """
-        Получение данных API Todoist. 
-        Для получения выполненных задач используется SYNC API. REST API не умеет работать с 
-        is_recurring=True задачами. Ограничение SYNC API - 30 задач за последние сутки.
-        Функция возвращает кортеж из выполненных задач за ТЕКУЩИЙ ДЕНЬ в виде словаря с ключами:
-        (task: содержание задачи, project: проект задачи, label:метка задачи, done_time: дата время выполнения задачи,
-        description: описание задачи)
-        """
         api = TodoistAPIAsync(token)
         done_items_url = "https://api.todoist.com/sync/v9/completed/get_all"  # URL получения выполненных задач
         headers = {"Authorization": f"Bearer {token}", "sync_token": "*"}
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url=done_items_url, headers=headers) as response:
-                response_json = await response.json()
+        async with aiohttp.ClientSession() as session, session.get(url=done_items_url, headers=headers) as response:
+            response_json = await response.json()
 
         # Проекты из response_json
         projects = {value["id"]: value["name"] for _, value in response_json["projects"].items()}
@@ -50,22 +50,23 @@ async def get_todoist_data(token: str) -> list[dict[str: Any | None]]:
                 "labels": ",".join(api_task.labels),
                 "description": api_task.description,
                 "completed_at": parse(task_data["completed_at"],
-                                      tzinfos=lambda x, y: gettz(TIMEZONE)) + timedelta(hours=timezone_offset),
+                                      tzinfos=lambda x, y: gettz(TIMEZONE)) + timedelta(hours=timezone_offset), # noqa ARG005
 
                 "added_at": parse(api_task.created_at,
-                                  tzinfos=lambda x, y: gettz(TIMEZONE)) + timedelta(hours=timezone_offset),
+                                  tzinfos=lambda x, y: gettz(TIMEZONE)) + timedelta(hours=timezone_offset), # noqa ARG005
 
                 "priority": api_task.priority,
             }
             competed_tasks.append(task.copy())
-        return competed_tasks
-
     except Exception as e:
         log.error("Ошибка в получении выполненных задач от todoist.", exc_info=e)
         log.exception(e)
+    else:
+        return competed_tasks
 
 
 if __name__ == "__main__":
-    res = asyncio.run(get_todoist_data(token="48cbdb22977eb9d84368aef673d3c7ba7c0f311a"))
+    # TODO удалить после тестов и перед заливкой в общий доступ
+    res = asyncio.run(get_todoist_data(token="48cbdb22977eb9d84368aef673d3c7ba7c0f311a")) # noqa S106
     for r in res:
-        print(r["completed_at"], r["task"])
+        print(r["completed_at"], r["task"])  # noqa T201

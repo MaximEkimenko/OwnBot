@@ -1,3 +1,5 @@
+# ruff: noqa
+"""CSS отображения отчётов."""
 full_report_css = """
             <style>
                 body {

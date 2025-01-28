@@ -1,3 +1,4 @@
+"""Обработчики получения файлов."""
 from aiogram import F, Router, types
 from openpyxl import load_workbook
 
@@ -8,11 +9,8 @@ router = Router(name=__name__)
 
 
 @router.message(F.document.mime_type == "application/pdf")
-async def handle_get_pdf(message: types.Message, user: User):
-    """Сохранение данных из загруженного файла PDF"""
-    # user = await User.auth(message.from_user.id)
-    # if user is False:
-    #     return
+async def handle_get_pdf(message: types.Message, user: User) -> None:
+    """Сохранение данных из загруженного файла PDF."""
     # проверка расширения
     file_name = message.document.file_name
     if not file_name.endswith(".pdf"):
@@ -39,12 +37,9 @@ async def handle_get_pdf(message: types.Message, user: User):
 
 
 @router.message(F.document.mime_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-async def handle_get_xlsx(message: types.Message, user: User):
-    """Сохранение данных из загруженного файла XLSX"""
+async def handle_get_xlsx(message: types.Message, user: User) -> None:  # noqa ARG001
+    """Сохранение данных из загруженного файла XLSX."""
     # TODO NotImplemented
-    # user = await User.auth(message.from_user.id)
-    # if user is False:
-    #     return
     file_name = message.document.file_name
     if not file_name.endswith(".xlsx"):
         await message.reply(f"Файл: {file_name} должен быть .xlsx")
@@ -59,8 +54,7 @@ async def handle_get_xlsx(message: types.Message, user: User):
 
         # Получение данных из ячейки
         sheet = workbook.active
-        cell_data = sheet["N14"].value
-        print(cell_data)
+        cell_data = sheet["N14"].value  # noqa F841
 
     except Exception as e:
         await message.reply(f"Произошла ошибка: {e!s}")

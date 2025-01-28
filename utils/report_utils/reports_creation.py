@@ -1,3 +1,4 @@
+"""Создание отчёта."""
 import io
 import datetime
 
@@ -14,7 +15,7 @@ async def create_full_html_report(user_id: int,
                                   start: datetime.date | None = None,
                                   end: datetime.date | None = None,
                                   ) -> io.BytesIO:
-    """Построение отчётов"""
+    """Построение отчётов HTML."""
     indicator_data = await get_all_indicators_report_data(user_id=user_id, start=start, end=end)
     # сортировка по предпочтениям из файла report_config.py
     if preferred_order:

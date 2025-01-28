@@ -1,3 +1,4 @@
+"""Функции для handlers telegram."""
 from email import encoders
 from pathlib import Path
 from email.mime.base import MIMEBase
@@ -15,7 +16,7 @@ from settings.mail_sender_config import mail_smpt_host, mail_smpt_port, mail_sen
 
 
 async def user_auth(message: types.Message) -> User | bool:
-    """Аутентификация пользователя"""
+    """Аутентификация пользователя."""
     command_name = message.text.split()[0]
     try:
         user = await User.auth(message.from_user.id)
@@ -32,7 +33,7 @@ async def user_auth(message: types.Message) -> User | bool:
 
 
 async def send_email(receivers: tuple, files: tuple) -> bool:
-    """Функция отправки письма получателями из receivers с файлами files"""
+    """Функция отправки письма получателями из receivers с файлами files."""
     today = init_today()
     for file in files:
         if not Path(file).exists():
@@ -53,7 +54,7 @@ async def send_email(receivers: tuple, files: tuple) -> bool:
                     filename = Path(file).name
                     ctype = "application/octet-stream"
                     maintype, subtype = ctype.split("/", 1)
-                    with open(file, "rb") as fp:
+                    with Path.open(file, "rb") as fp:
                         mime_file = MIMEBase(maintype, subtype)
                         mime_file.set_payload(fp.read())
                         encoders.encode_base64(mime_file)

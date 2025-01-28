@@ -1,3 +1,4 @@
+"""Обработчики команд задач по расписанию."""
 from aiogram import Router, types
 from aiogram.filters import Command
 
@@ -26,11 +27,8 @@ router = Router(name=__name__)
 
 
 @router.message(Command("taskadd"))
-async def handler_taskadd(message: types.Message, user: User):
-    """Команда добавления / обновления задачи"""
-    # user = await user_auth(message)
-    # if user is False:
-    #     return
+async def handler_taskadd(message: types.Message, user: User) -> None:
+    """Команда добавления / обновления задачи."""
     is_update = False
     user_telegram_id = message.from_user.id
     task_elements = message.text.split(maxsplit=6)[1:]  # строка параметров пользователя
@@ -100,11 +98,8 @@ async def handler_taskadd(message: types.Message, user: User):
 
 
 @router.message(Command("taskdel"))
-async def taskdel(message: types.Message, user: User):
-    """Команда удаления задачи"""
-    # user = await user_auth(message)
-    # if user is False:
-    #     return
+async def taskdel(message: types.Message, user: User) -> None:
+    """Команда удаления задачи."""
     user_telegram_id = message.from_user.id
     reminder_elements = message.text.split(maxsplit=2)[1:]  # строка команды с именем задачи
     # проверка имени задачи
@@ -141,11 +136,8 @@ async def taskdel(message: types.Message, user: User):
 
 
 @router.message(Command("tasksget"))
-async def tasksget(message: types.Message, user: User):
-    """Получение всех задач пользователя"""
-    # user = await user_auth(message)
-    # if user is False:
-    #     return
+async def tasksget(message: types.Message, user: User) -> None:
+    """Получение всех задач пользователя."""
     db_tasks = await user.get_all_tasks()
 
     tasks = get_planned_jobs(db_tasks)
