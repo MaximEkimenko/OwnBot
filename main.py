@@ -1,6 +1,6 @@
 """Точка вхожа в приложение."""
 import asyncio
-from utils.scheduler_utils.setup_scheduler import setup_scheduler
+
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums.parse_mode import ParseMode
@@ -9,7 +9,7 @@ from config import settings, set_bot_commands
 from handlers import router as main_router
 from logger_config import log
 from middlewares.middlewares import AuthMiddleware
-
+from utils.scheduler_utils.setup_scheduler import setup_scheduler
 
 # TODO V1.0:
 #  tests, refactoring after

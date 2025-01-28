@@ -1,4 +1,5 @@
 """Обработка команд управления задачами по расписанию."""
+
 from logger_config import log
 from utils.scheduler_utils.scheduler_actions import (
     schedule_send_mail,
