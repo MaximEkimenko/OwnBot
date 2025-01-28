@@ -1,5 +1,8 @@
 """Класс пользователя."""
-from typing import Self
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Self
 
 import enums
 
@@ -60,7 +63,7 @@ class User:
                                                               user_id=self.user_id)
 
     @classmethod
-    async def auth(cls, telegram_id: int) -> Self:  # реализация фабричного метода
+    async def auth(cls, telegram_id: int) -> "Self":  # реализация фабричного метода
         """Авторизация пользователя по telegram_id."""
         user_data = await user_db_utils.get_user_data_by_telegram_id(telegram_id=telegram_id)
         if not user_data:

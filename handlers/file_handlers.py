@@ -1,15 +1,19 @@
 """Обработчики получения файлов."""
+from typing import TYPE_CHECKING
+
 from aiogram import F, Router, types
 from openpyxl import load_workbook
 
-from classes.user import User
 from logger_config import log
+
+if TYPE_CHECKING:
+    from classes.user import User
 
 router = Router(name=__name__)
 
 
 @router.message(F.document.mime_type == "application/pdf")
-async def handle_get_pdf(message: types.Message, user: User) -> None:
+async def handle_get_pdf(message: types.Message, user: "User") -> None:
     """Сохранение данных из загруженного файла PDF."""
     # проверка расширения
     file_name = message.document.file_name
@@ -37,7 +41,7 @@ async def handle_get_pdf(message: types.Message, user: User) -> None:
 
 
 @router.message(F.document.mime_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-async def handle_get_xlsx(message: types.Message, user: User) -> None:  # noqa ARG001
+async def handle_get_xlsx(message: types.Message, user: "User") -> None:  # noqa ARG001
     """Сохранение данных из загруженного файла XLSX."""
     # TODO NotImplemented
     file_name = message.document.file_name

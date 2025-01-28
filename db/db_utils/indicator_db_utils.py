@@ -93,8 +93,7 @@ async def create_or_update_indicators(user_id: int, data: dict, session: AsyncSe
             )
             await session.execute(stmt)
             await session.commit()
-            result_string += (f"Показатель {indicator_name} = {indicator_value}, "
-                              f"для пользователя id={user_id} обновлён.\n")
+            result_string += f"Показатель {indicator_name} = {indicator_value} обновлён.\n"
     log.debug(result_string)
     return result_string
 

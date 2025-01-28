@@ -1,6 +1,10 @@
 """Задачи по расписанию."""
-from enums import TaskType
+from typing import TYPE_CHECKING
+
 from db.db_utils.scheduler_db_utils import save_reminder_data, delete_reminder_data, update_reminder_data
+
+if TYPE_CHECKING:
+    from enums import TaskType
 
 
 class ScheduleTask:
@@ -10,7 +14,7 @@ class ScheduleTask:
 
     def __init__(self, name: str,
                  user_id: int,
-                 task_type: TaskType,
+                 task_type: "TaskType",
                  schedule_params: dict,
                  user_telegram_data: dict) -> None:
         """Инициализация задачи по расписанию."""

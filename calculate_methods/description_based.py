@@ -1,10 +1,14 @@
 """Методика расчёта на основании todoist description."""
+from typing import TYPE_CHECKING
 from collections import defaultdict
-from collections.abc import Sequence
 
-from db.models import TodoistTask
 from db.db_utils import todoist_task_db_utils
 from db.db_utils.indicator_db_utils import get_literal_project_dict, create_or_update_indicators
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from db.models import TodoistTask
 
 
 async def get_description_todoist_dict(user_id: int) -> str:
