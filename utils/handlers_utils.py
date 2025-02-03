@@ -17,7 +17,7 @@ from settings.mail_sender_config import mail_smpt_host, mail_smpt_port, mail_sen
 
 async def user_auth(message: types.Message) -> User | bool:
     """Аутентификация пользователя."""
-    command_name = message.text.split()[0]
+    command_name = message.text.split()[0] if message.text else "scheduled_command"
     try:
         user = await User.auth(message.from_user.id)
     except UserDoesNotExistError:

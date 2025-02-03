@@ -1,5 +1,6 @@
 """Точка вхожа в приложение."""
 import asyncio
+import threading
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -29,12 +30,25 @@ bot = Bot(token=settings.BOT_TOKEN,
           )
 
 
+def start_scheduler_in_thread(bot: Bot, loop: asyncio.AbstractEventLoop) -> None:
+    """Запуск планировщика в отдельном потоке."""
+    def run_scheduler() -> None:
+        # Запускаем корутину в основном цикле событий
+        asyncio.run_coroutine_threadsafe(setup_scheduler(bot), loop)
+
+    # Запускаем поток
+    thread = threading.Thread(target=run_scheduler, daemon=True)
+    thread.start()
+
+
 async def on_startup() -> None:  # функция выполняется при запуске бота
     """Функция на выполнение при запуске бота."""
     await bot.send_message(chat_id=settings.SUPER_USER_TG_ID, text="Бот вышел online.")
     log.info("Бот запушен.")
     # запуск планировщика
-    await setup_scheduler(bot=bot)
+    # await setup_scheduler(bot=bot)
+    # Запуск планировщика в отдельном потоке
+    start_scheduler_in_thread(bot=bot, loop=asyncio.get_event_loop())
 
 
 async def on_shutdown() -> None:
