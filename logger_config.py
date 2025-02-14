@@ -16,7 +16,7 @@ console_format = (
 
 LOG_DIR = BaseDIR / "logs"
 if not Path.exists(LOG_DIR):
-    Path.mkdir(LOG_DIR)
+    Path.mkdir(LOG_DIR, parents=True)
 
 logger.remove()  # Удаляем стандартный обработчик (иначе будет дублирование)
 
