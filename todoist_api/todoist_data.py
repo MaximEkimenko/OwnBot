@@ -1,5 +1,4 @@
 """Получение данных из todoist api."""
-import asyncio
 
 from typing import Any
 from datetime import timedelta
@@ -63,10 +62,3 @@ async def get_todoist_data(token: str) -> list[dict[str: Any | None]]:
         log.exception(e)
     else:
         return competed_tasks
-
-
-if __name__ == "__main__":
-    # TODO удалить после тестов и перед заливкой в общий доступ
-    res = asyncio.run(get_todoist_data(token="48cbdb22977eb9d84368aef673d3c7ba7c0f311a")) # noqa S106
-    for r in res:
-        print(r["completed_at"], r["task"])  # noqa T201

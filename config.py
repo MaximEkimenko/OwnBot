@@ -17,7 +17,6 @@ class Settings(BaseSettings):
     BASE_DIR: Path = Path(__file__).parent
     DB_NAME: str
     BOT_TOKEN: str
-    TODOIST_TOKEN: str
     SUPER_USER_TG_ID: int
     MAIL_SERVER_TOKEN: str
 
@@ -36,7 +35,6 @@ TIMEZONE = timezones.ASIA_OMSK
 local_timezone = ZoneInfo(TIMEZONE)
 
 
-# TODO найти лучшее решение передачи даты начала отчёта по умолчанию
 first_day_to_report = datetime.date(year=2024, month=1, day=1)
 
 
@@ -57,10 +55,6 @@ async def set_bot_commands(bot: Bot) -> None:
     commands = [BotCommand(command="/go", description="Выполнить расчёт, получить отчёт."),
                 BotCommand(command="/tasksget", description="Получение списка всех запланированных задач."),
                 BotCommand(command="/db", description="Отправка копии БД на электронную почту"),
+                BotCommand(command="/help", description="Инструкция по использованию приложения."),
                 ]
     await bot.set_my_commands(commands)
-
-
-if __name__ == "__main__":
-    pass
-

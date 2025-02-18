@@ -18,7 +18,14 @@ class AuthMiddleware(BaseMiddleware):
                        data: dict[str, Any]) -> Any:  # noqa ANN401
         """Вызов middleware."""
         if event.message:
+            # разрешённые команды
+            allowed_messages = ("/start", "/register", "/help")
             message: types.Message = event.message
+            if message.text in allowed_messages:
+                log.debug("Допустимое сообщение {message} от пользователя {user_id}.",
+                          message=message.text,
+                          user_id=message.from_user.id)
+                return await handler(event, data)
             user = await user_auth(message)
             if user is False:
                 return None

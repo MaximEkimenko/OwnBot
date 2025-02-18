@@ -14,6 +14,54 @@ from utils.handlers_utils import send_email
 router = Router(name=__name__)
 
 
+@router.message(Command("register"))
+async def handle_register(message: types.Message) -> None:
+    """Регистрация нового пользователя."""
+    user = await User.register(message.from_user.id)
+    if not user:
+        await message.answer(text=f"Данный пользователь {message.from_user.id} уже зарегистрирован.")
+        log.warning(f"Попытка регистрации пользователя {message.from_user.id}, который уже зарегистрирован.")
+        return
+
+    log.success(f"Пользователь {message.from_user.id} успешно зарегистрирован.")
+    await message.answer(text="Вы успешно зарегистрировались.")
+
+
+@router.message(Command("add_token"))
+async def add_token_handler(message: types.Message, user: User) -> None:
+    """Обработка добавления Todoist токена пользователя."""
+    command_elements = message.text.split()[1:]
+    if len(command_elements) > 1:
+        await message.answer(text="Неверное количество параметров. Пример: /add_token `строка токена`")
+        log.warning(f"Неверный ввод Todoist токена {message.from_user.id}, "
+                    f"который не указал токен.")
+        return
+    try:
+        token = verify_string_as_filename(message.text.split(maxsplit=1)[1])
+    except StringInputError as e:
+        await message.answer(text=f"Неверно введён токен.\n{e.args[0]}")
+        log.warning(f"Неверно введён токен пользователем {message.from_user.id}, ")
+        return
+    else:
+        await message.answer(text=f"Todoist token успешно добавлен пользователем "
+                                  f"{message.from_user.id}.")
+        log.success(f"Todoist token успешно обновлён {message.from_user.id}, "
+                    f"который не указал токен.")
+        await user.add_todoist_token(token)
+
+
+@router.message(Command("add_indicators"))
+async def add_indicators_handler(message: types.Message, user: User) -> None:
+    """Обработка добавления показателей пользователя из файла json."""
+    result = await user.add_params_json()
+    if not result:
+        await message.answer(text="Показатели не добавлены, либо уже существуют. Проверьте файл json.")
+        return
+
+    log.debug(f"Пользователь {user.user_id} добавил показатели из файла json.")
+    await message.answer(text="Показатели успешно добавлены.")
+
+
 @router.message(Command("savetd"))
 async def handler_savetd(message: types.Message, user: User) -> None:
     """Обработка ручного запуска сохранения todoist данных."""
@@ -23,7 +71,7 @@ async def handler_savetd(message: types.Message, user: User) -> None:
 
 
 @router.message(Command("ind"))
-async def handler_ind(message: types.Message,  schedule_bot: Bot = None, user: User = None) -> bool:
+async def handler_ind(message: types.Message, schedule_bot: Bot = None, user: User = None) -> bool:
     """Обработка ручного запуска расчёта показателей todoist данных."""
     # проверка задачи по расписанию
     bot = get_bot_for_schedule(message, schedule_bot)
@@ -80,7 +128,7 @@ async def handler_report_create(message: types.Message,
         return
     # проверка существования типа отчёта
     if report_type not in enums.ReportType:
-        bot.send_message(chat_id=user_id, text="Такого типа отчёта не существует. ")
+        await bot.send_message(chat_id=user_id, text="Такого типа отчёта не существует. ")
         return
     report = await user.report_config(report_name=report_name, report_type=report_type)
 

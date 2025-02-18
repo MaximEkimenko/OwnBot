@@ -1,5 +1,5 @@
 """Класс параметров показателя."""
-from db.db_utils import indicator_db_utils
+# TODO ну жен этот класс?
 
 
 class IndicatorParam:
@@ -35,9 +35,9 @@ class IndicatorParam:
         self.calc_as_average = calc_as_average
         self.user_id = user_id
 
-    async def add_params_json(self) -> bool:
-        """Добавление настроек через файл json."""
-        return await indicator_db_utils.add_indicator_params_json(self.user_id)
+    # async def add_params_json(self) -> bool: # TODO перенесено в user
+    #     """Добавление настроек через файл json."""
+    #     return await indicator_db_utils.add_indicator_params_json(self.user_id)
 
     async def add_param(self) -> None:
         # TODO метод добавление параметра пользователем и вызовом через интерфейс через интерфейс

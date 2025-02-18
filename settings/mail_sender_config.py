@@ -7,6 +7,7 @@ from pathlib import Path
 
 from config import BaseDIR
 
+# TODO убрать перед push в репозиторий
 mail_smpt_host = "smtp.yandex.ru"
 mail_smpt_port = 465
 mail_sender_address = "omzit-report@yandex.ru"

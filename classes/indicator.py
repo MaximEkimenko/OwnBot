@@ -35,7 +35,7 @@ class Indicator:
                  params: IndicatorParam | None = None) -> None:
         """Инициализация показателя."""
         self.name = name
-        self.params = params
+        self.params = params  # TODO нужно ли?
         self.user_id = user_id
 
     async def calculate_save_indicators(self) -> tuple:

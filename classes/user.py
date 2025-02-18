@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 import enums
 
-from db.db_utils import user_db_utils, todoist_task_db_utils
+from db.db_utils import user_db_utils, indicator_db_utils, todoist_task_db_utils
 from classes.report import Report
 from classes.indicator import Indicator
 from own_bot_exceptions import UserDoesNotExistError
@@ -122,3 +122,7 @@ class User:
                  line["schedule_params"]["task_kwargs"],
                  )
                 for line in tasks]
+
+    async def add_params_json(self) -> bool:
+        """Добавление настроек через файл json."""
+        return await indicator_db_utils.add_indicator_params_json(self.user_id)
