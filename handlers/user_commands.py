@@ -1,5 +1,8 @@
 """Команды пользователя."""
+import random
+
 from aiogram import Bot, Router, types
+from aiohttp import ClientSession
 from aiogram.filters import Command
 from aiogram.utils.chat_action import ChatActionSender
 
@@ -15,7 +18,7 @@ router = Router(name=__name__)
 
 
 @router.message(Command("register"))
-async def handle_register(message: types.Message) -> None:
+async def handler_register(message: types.Message) -> None:
     """Регистрация нового пользователя."""
     user = await User.register(message.from_user.id)
     if not user:
@@ -28,7 +31,7 @@ async def handle_register(message: types.Message) -> None:
 
 
 @router.message(Command("add_token"))
-async def add_token_handler(message: types.Message, user: User) -> None:
+async def handler_add_token(message: types.Message, user: User) -> None:
     """Обработка добавления Todoist токена пользователя."""
     command_elements = message.text.split()[1:]
     if len(command_elements) > 1:
@@ -51,7 +54,7 @@ async def add_token_handler(message: types.Message, user: User) -> None:
 
 
 @router.message(Command("add_indicators"))
-async def add_indicators_handler(message: types.Message, user: User) -> None:
+async def handler_add_indicators(message: types.Message, user: User) -> None:
     """Обработка добавления показателей пользователя из файла json."""
     result = await user.add_params_json()
     if not result:
@@ -227,3 +230,29 @@ async def handler_db(message: types.Message, user: User) -> None:
                   user=user.user_id,
                   telegram_id=message.from_user.id)
         log.exception(e)
+
+
+@router.message(Command("joke"))
+async def handler_joke(message: types.Message, user: User) -> None:
+    """Команда получения шутки из API http://rzhunemogu.ru/FAQ.aspx."""
+    type_codes = (1, 4, 5, 8, 11, 14, 15, 18)
+    type_of_joke = random.choice(type_codes)
+    joke_url = f"http://rzhunemogu.ru/RandJSON.aspx?CType={type_of_joke}"
+    async with ClientSession() as session, session.get(url=joke_url) as response:
+        text = await response.text()
+    text = (
+        text.replace("content", "")
+        .replace("{", "")
+        .replace("}", "")
+        .replace('"', "")
+        .replace(":", "")
+    )
+    try:
+        await message.reply(text=text)
+    except Exception as e:
+        log.error(f"Ошибка при отправке шутки пользователю id={user.user_id}")
+        log.exception(e)
+        await message.reply(text="Не найдено, попробуйте ещё раз.")
+    else:
+        log.debug(f"Шутка успешно отправлена пользователю id={user.user_id}")
+

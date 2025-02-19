@@ -69,6 +69,7 @@ ignore = [
    "ASYNC230",  # открытие файлов через anyio
    "BLE001",  # запрет обработки исключения Exception
    "RET503",  # явный вызов return
+   "S311",  # Checks for uses of cryptographically weak pseudo-random number generators
 ]
 
 [lint.flake8-quotes]
