@@ -5,7 +5,6 @@ import threading
 from asyncio.exceptions import CancelledError
 
 from aiogram import Bot, Dispatcher
-from aiogram.utils.backoff import BackoffConfig
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums.parse_mode import ParseMode
 
@@ -17,17 +16,18 @@ from utils.scheduler_utils.setup_scheduler import setup_scheduler
 
 # TODO V1.0:
 # TODO найти лучшее решение передачи даты начала отчёта по умолчанию в файле config.py first_day_to_report
+#  Добавить метод получения значений показателей на данный момент
+#  Добавить получения полной бд в xlsx и листа за сегодня
 #  tests, refactoring after
 #  refactor with gpt (give him code and watch for result)
 #  helps + docs + method description
 #  docker, migrate from phone to server or cloud
 #  new features with remaining file TODOS:
-#  обработка метки @Achievement  report types, report settings interface, user settings interface,
-#  scheduler settings interface etc
+#  обработка метки @Achievement  report types, report global_settings interface, user global_settings interface,
+#  scheduler global_settings interface etc
 #  обработка ошибки отсутствия первоначального заполнения IndicatorParams, подробная инструкция настройки,
 #  в том числе настройки стилей отчётов
 #  попробовать запустить самому по инструкции на другом устройстве с другими показателями
-
 
 def start_scheduler_in_thread(bot: Bot, loop: asyncio.AbstractEventLoop) -> None:
     """Запуск планировщика в отдельном потоке."""
@@ -35,7 +35,7 @@ def start_scheduler_in_thread(bot: Bot, loop: asyncio.AbstractEventLoop) -> None
     def run_scheduler() -> None:
         asyncio.run_coroutine_threadsafe(setup_scheduler(bot), loop)
 
-    thread = threading.Thread(target=run_scheduler, daemon=False)
+    thread = threading.Thread(target=run_scheduler, daemon=True)
     thread.start()
 
 
@@ -68,14 +68,7 @@ async def main() -> None:
         await bot.delete_webhook(drop_pending_updates=True)
         await set_bot_commands(bot)  # установка команд
         dp.update.middleware(AuthMiddleware())  # добавление middleware
-
-        backoff_config = BackoffConfig(
-            max_delay=30,
-            min_delay=2,
-            factor=2,
-            jitter=0.5,
-        )
-        await dp.start_polling(bot, polling_timeout=30, backoff_config=backoff_config)
+        await dp.start_polling(bot)
     except (KeyboardInterrupt, CancelledError):
         log.debug("Бот остановлен принудительной командой.")
     finally:

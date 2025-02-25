@@ -11,7 +11,7 @@ from config import BaseDIR
 from logger_config import log
 from own_bot_exceptions import StringLengthError
 from utils.common_utils import verify_string_length, should_be_never_called
-from settings.mail_sender_config import files, receivers
+from global_settings.mail_sender_config import files, receivers
 from utils.scheduler_utils.params_validation import (
     validate_task_type,
     validate_day_of_week,

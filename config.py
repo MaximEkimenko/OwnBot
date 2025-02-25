@@ -8,7 +8,7 @@ from aiogram import Bot
 from aiogram.types import BotCommand
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from settings import timezones
+from global_settings import timezones
 
 
 class Settings(BaseSettings):

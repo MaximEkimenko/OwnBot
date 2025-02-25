@@ -3,7 +3,11 @@ from io import BytesIO
 
 from classes.indicator_param import IndicatorParam
 from calculate_methods.pdf_based import pdf_indicator_to_db
-from db.db_utils.indicator_db_utils import create_or_update_indicators, get_indicator_params_id_dict
+from db.db_utils.indicator_db_utils import (
+    create_indicator_params,
+    create_or_update_indicators,
+    get_indicator_params_id_dict,
+)
 from calculate_methods.quantity_based import get_quantity_todoist_dict
 from calculate_methods.description_based import get_description_todoist_dict
 from calculate_methods.default_values_based import get_default_values_dict
@@ -69,3 +73,9 @@ class Indicator:
     async def manual_update_save_indicators(self, indicator_data: dict) -> str:
         """Сохранение данных из команды update."""
         return await create_or_update_indicators(self.user_id, data=indicator_data)
+
+
+    async def add_indicator_params(self, params: dict) -> None:
+        """Добавление параметра показателя."""
+        return await create_indicator_params(user_id=self.user_id, data=params)
+

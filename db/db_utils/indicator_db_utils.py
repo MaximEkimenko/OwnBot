@@ -21,7 +21,7 @@ from logger_config import log
 @connection
 async def add_indicator_params_json(user_id: int, session: AsyncSession) -> bool:
     """Заполнение параметров показателя."""
-    json_path = BaseDIR / Path("settings") / "indicators.json"
+    json_path = BaseDIR / Path("global_settings") / "indicators.json"
     # TODO обработать ошибку на уровне выше, вернуть пользователю соответствующее сообщение
     if not json_path.is_file():
         error_message = f"Файл indicators.json не найден по пути {json_path}."
@@ -50,6 +50,58 @@ async def add_indicator_params_json(user_id: int, session: AsyncSession) -> bool
         return False
 
     return True
+
+
+@connection
+async def create_indicator_params(user_id: int, data: dict, session: AsyncSession) -> str:
+    """Добавление параметров показателя."""
+    indicator_name = data.get("indicator_name")
+    stmt = (
+        select(IndicatorParams.indicator_name)
+        .where(IndicatorParams.user_id == user_id,
+               IndicatorParams.indicator_name == indicator_name)
+    )
+
+    result = await session.execute(stmt)
+    exist_indicator = result.scalar_one_or_none()
+    if exist_indicator:
+        log.debug("Ввод существующего показателя пользователем {user_id} с именем {indicator_name} уже существует.",
+                  user_id=user_id, indicator_name=indicator_name)
+        return f"Показатель с именем {indicator_name} уже существует."
+
+    project_name = data.get("project_name")
+    stmt = (
+        select(IndicatorParams.indicator_name)
+        .where(IndicatorParams.user_id == user_id,
+               IndicatorParams.project_name == project_name)
+    )
+    result = await session.execute(stmt)
+    exist_project = result.scalars().all()
+    if not exist_project:
+        log.debug("Ввод несуществующего проекта пользователем {user_id} с именем {project_name}.",
+                  user_id=user_id, project_name=project_name)
+        return f"Проект с именем {project_name} не существует. Выберите существующий проект."
+
+    indicator_params = IndicatorParams(indicator_name=data.get("indicator_name"),
+                                       user_id=user_id,
+                                       project_name=data.get("project_name"),
+                                       label_name=data.get("label_name"),
+                                       task_name=data.get("task_name"),
+                                       description_literal=data.get("description_literal"),
+                                       calc_as_average=data.get("calc_as_average"),
+                                       project_track_based_method=data.get("project_track_based_method"),
+                                       description_based_method=data.get("description_based_method"),
+                                       quantity_based_method=data.get("quantity_based_method"),
+                                       file_based_method=data.get("file_based_method"),
+                                       label_track_based_method=data.get("label_track_based_method"),
+                                       task_name_track_based_method=data.get("task_name_track_based_method"),
+                                       file_read_param=data.get("file_read_param"),
+                                       )
+    session.add(indicator_params)
+    await session.commit()
+    log.debug("Показатель с именем {indicator_name} создан пользователем {user_id}.",
+              user_id=user_id, indicator_name=indicator_name)
+    return f"Показатель с именем {indicator_name} создан."
 
 
 # UPDATE

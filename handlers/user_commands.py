@@ -3,7 +3,7 @@ import random
 
 from aiogram import Bot, Router, types
 from aiohttp import ClientSession
-from aiogram.filters import Command
+from aiogram.filters import Command, CommandObject
 from aiogram.utils.chat_action import ChatActionSender
 
 import enums
@@ -216,7 +216,7 @@ async def handler_go(message: types.Message, user: User, schedule_bot: Bot = Non
 async def handler_db(message: types.Message, user: User) -> None:
     """Отправка копии файла БД на электронную почту."""
     # TODO добавить обработку варианта заполнения через sender.json
-    from settings.mail_sender_config import files, receivers
+    from global_settings.mail_sender_config import files, receivers
     try:
         await send_email(receivers=receivers, files=files)
         await message.answer(text=f'"Письмо отправлено на: {receivers[0]}."')
@@ -256,3 +256,46 @@ async def handler_joke(message: types.Message, user: User) -> None:
     else:
         log.debug(f"Шутка успешно отправлена пользователю id={user.user_id}")
 
+
+@router.message(Command("create"))
+async def handler_create(message: types.Message, user: User, command: CommandObject) -> None:
+    """Команда создания нового показателя."""
+    if not command.args:
+        await message.answer(text="Неверно введена команда /create.\n "
+                                  "Вид команды:/create `имя показателя` `имя проекта` `параметр1` `параметр2 ...")
+    indicator_params = command.args.split(maxsplit=len(command.args.split()) - 1)
+
+    # валидация ввода
+    for param in indicator_params:
+        try:
+            verify_string_as_filename(param)
+        except StringInputError as e:
+            await message.answer(text=f"Неверно введён параметр {param}. {e.args[0]}.")
+            log.warning("Показатель {indicator} не прошёл валидацию. {traceback}.",
+                        indicator=param,
+                        traceback=e.args[0],
+                        )
+    # TODO учесть типы передаваемых параметров для остальных случаев
+    params_sequence = ("indicator_name",
+                       "project_name",
+                       "label_name",
+                       "task_name",
+                       "description_literal",
+                       "calc_as_average",
+                       "project_track_based_method",
+                       "description_based_method",
+                       "quantity_based_method",
+                       "file_based_method",
+                       "label_track_based_method",
+                       "task_name_track_based_method",
+                       "file_read_param",
+                       )
+    result_dict = {}
+    for index, param in enumerate(params_sequence):
+        if index >= len(indicator_params):
+            break
+
+        result_dict[param] = indicator_params[index]
+
+    msg = await user.indicators.add_indicator_params(params=result_dict)
+    await message.answer(text=msg)

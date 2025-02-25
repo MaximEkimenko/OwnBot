@@ -217,6 +217,6 @@ indicator_params = [
 
 ]
 
-# json_path = BaseDIR / Path('settings') / 'indicators.json'
+# json_path = BaseDIR / Path('global_settings') / 'indicators.json'
 # json_data = json.loads(json_path.read_text())
 # print(json_data, type(json_data))

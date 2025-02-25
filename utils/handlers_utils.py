@@ -12,7 +12,7 @@ from config import init_today, mail_server_token
 from classes.user import User
 from logger_config import log
 from own_bot_exceptions import UserDoesNotExistError
-from settings.mail_sender_config import mail_smpt_host, mail_smpt_port, mail_sender_address
+from global_settings.mail_sender_config import mail_smpt_host, mail_smpt_port, mail_sender_address
 
 
 async def user_auth(message: types.Message) -> User | bool:

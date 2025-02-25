@@ -6,8 +6,8 @@ import pygal
 
 from pygal.style import Style
 
-from settings.report_config import date_label_freq, preferred_order, preferred_colors
 from db.db_utils.report_db_utils import get_all_indicators_report_data
+from global_settings.report_config import date_label_freq, preferred_order, preferred_colors
 from utils.report_utils.report_css import full_report_css
 
 
