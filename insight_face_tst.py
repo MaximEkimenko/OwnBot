@@ -1,6 +1,7 @@
 """Тестовая версия видеонаблюдения с распознаванием лиц с помощью InsightFace."""
 # ruff: noqa
 import json
+import os
 
 import time
 import datetime
@@ -11,6 +12,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+import psutil
 
 from insightface.app import FaceAnalysis
 from sympy.physics.units.util import quantity_simplify
@@ -28,6 +30,23 @@ video_stream_port = 25575
 rtsp_video_streaming = 554
 framerate = 100
 server_port = 25571
+
+
+def feedback_json_create(json_pid_file_path: Path = Path("PID.json")) -> str:
+    """Функция создает json файл обратной связи json_file_path c PID, PPID и именем процесса"""
+    PID = os.getpid()  # id процесса
+    PARENT_PID = os.getppid()  # id для родительского процесса
+    feedback_list = {'datetime': str(datetime.datetime.now()), 'PID': PID, 'PARENT_PID': PARENT_PID,
+                     'process_name': psutil.Process(PID).name()}
+    try:
+        with json_pid_file_path.open('w') as jsonfile:
+            jsonfile.write(json.dumps(feedback_list))
+            result = 'Файл обратной связи создан.\n'
+        print("Feedback json updated...")
+    except Exception as e:
+        print(e)
+        result = f'При создании файла возникла ошибка: {e}'
+    return result
 
 
 def check_new_embedings(directory: Path = Path(r"D:\projects\OmzitDetect\fio_pictures")) -> bool:
@@ -48,7 +67,6 @@ def check_new_embedings(directory: Path = Path(r"D:\projects\OmzitDetect\fio_pic
         1 for file in directory.rglob("*")
         if file.is_file() and file.suffix.lower() in {".jpg"}
     )
-    print(count_image_files)
     # предыдущее количество файлов
     prev_count_image_files = int(sum_file.read_text())
 
@@ -58,7 +76,7 @@ def check_new_embedings(directory: Path = Path(r"D:\projects\OmzitDetect\fio_pic
         embedings_file.unlink()
         print("Pictures files has changed.")
         return True
-    print("No new embeddings. Starting recognition service.")
+    print("No new embeddings. Starting recognition service. \n")
     return False
 
 
@@ -103,6 +121,8 @@ def show_video_stream(k_limit: float = 1.0, model_name: str = "buffalo_l") -> No
     app = FaceAnalysis(name=model_name,
                        providers=['CPUExecutionProvider'])  # Используем CPU (замените на GPU, если доступно)
     # app = FaceAnalysis(name="buffalo_l", providers=["CUDAExecutionProvider"])
+    det_size_small = (320, 320)
+    det_size_average = (640, 640)
     app.prepare(ctx_id=0, det_size=(1280, 1280))
 
     # чтение ссылки на видео-поток из файла
@@ -291,6 +311,9 @@ if __name__ == "__main__":
 
     if check_new_embedings(directory=fio_path):
         create_embeddings_from_folders(database_path=fio_path, model_name=models[0])
+
+    # создание файла обратной связи
+    feedback_json_create()
 
     # TODO сделать перезапуск видеопотока через json обратной связи
     show_video_stream(k_limit=1.0, model_name=models[0])
