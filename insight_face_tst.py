@@ -167,7 +167,7 @@ def show_video_stream(k_limit: float = 1.0, model_name: str = "buffalo_l") -> No
             if left > x_limit:
                 continue  # Пропускаем лица за пределами области
 
-            if face.det_score < 0.9:  # Пропускаем лица с низкой уверенностью
+            if face.det_score < 0.9:
                 print("quality frame:", face.det_score)
             pic_width = face.bbox[2] - face.bbox[0]
             pic_height = face.bbox[3] - face.bbox[1]
@@ -190,7 +190,7 @@ def show_video_stream(k_limit: float = 1.0, model_name: str = "buffalo_l") -> No
             name = "Unknown"
 
             best_match_koef = float(distances[best_match_index])
-            if best_match_koef < 1.3:  # Оптимальное пороговое значение
+            if best_match_koef < 1.26:
                 name = known_names[best_match_index]
                 cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
                 cv2.putText(frame, name, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
