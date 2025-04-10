@@ -1,27 +1,25 @@
-# ruff: noqa
+"""Модуль перезапуска процесса по PID."""
+# TODO после тестов перенести в Detect project с отдельным venv python 3.12.8
 import json
-import subprocess
 import time
+import subprocess
 
 from pathlib import Path
 
 import psutil
 
+from logger_config import log
+
 
 def run_subprocess(script_path: Path) -> None:
     """Запускает python скрипт script_path в его виртуальном окружении."""
     venv_path = Path(__file__).parent / Path(".venv")
-    # Запускаем команду через shell
-    subprocess.run(
-        f"call {venv_path}\\Scripts\\activate.bat && python {script_path}",
-        shell=True,
-        check=True,
-    )
+    subprocess.run([f"{venv_path}\\Scripts\\python.exe", script_path], check=True)
 
 
 def process_run_check(process_name: str = "python.exe",
-                      target_file: Path = None,
-                      process_bat_path: Path = None,
+                      target_file: Path | None = None,
+                      process_bat_path: Path | None = None,
                       json_file_name: Path = Path("PID.json")) -> list:
     """Функция перезапускает процесс с именем process_name.
 
@@ -30,21 +28,23 @@ def process_run_check(process_name: str = "python.exe",
     файле обратной связи json_file_name, который создает запускаемый процесс
     """
     if not target_file and not process_bat_path:
-        raise ValueError("target_file or process_bat_path must be specified!")
+        msg = "target_file or process_bat_path must be specified!"
+        raise ValueError(msg)
     with json_file_name.open("r") as file:  # чтение файла обратной связи
         feedback_dict = json.load(file)
     is_running = False
     pid_list = []
     for process in psutil.process_iter():
         pid_list.append((process.pid, process.name()))
-        if process.pid == feedback_dict["PID"] and feedback_dict["process_name"] == process_name:
-            print(f"process {target_file} is running!")
+        if process.pid == feedback_dict["pid"] and feedback_dict["process_name"] == process_name:
+            log.info("process {target_file} is running!", target_file=target_file)
             is_running = True
             break
     if not is_running:
         # os.startfile(process_bat_path)  # запуск bat файла
+        # log.info("\Bat file {process_bat_path} used to start process!\n", process_bat_path=process_bat_path)
         run_subprocess(Path(target_file))  # запуск python скрипта
-        print(f"\nPROCESS {target_file} restarted!\n")
+        log.info("\nPROCESS {target_file} restarted!\n", target_file=target_file)
     return pid_list
 
 
@@ -54,5 +54,6 @@ if __name__ == "__main__":
         try:
             process_run_check(target_file=_target_file)
         except Exception as e:
-            print(e)
+            log.error("Error while running process.")
+            log.exception(e)
         time.sleep(10)

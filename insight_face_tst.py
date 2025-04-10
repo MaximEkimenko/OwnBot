@@ -1,13 +1,15 @@
 """Тестовая версия видеонаблюдения с распознаванием лиц с помощью InsightFace."""
-# ruff: noqa
-import json
+# TODO после тестов перенести в Detect project с отдельным venv python 3.12.8
 import os
-
+import json
 import time
 import datetime
 import subprocess
 
-from io import TextIOWrapper
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from io import TextIOWrapper
 from pathlib import Path
 
 import cv2
@@ -15,50 +17,39 @@ import numpy as np
 import psutil
 
 from insightface.app import FaceAnalysis
-from sympy.physics.units.util import quantity_simplify
 
-# trassir servers
-server3 = "192.168.9.60"
-server4 = "192.168.9.200"
-server5 = "192.168.9.59"
+from logger_config import log
 
-# trassir data
-user_mame = "SDK"
-user_password = "mr78jaeK9l720Yu"
-chanel_guid = "jzR1xGgm"
-video_stream_port = 25575
-rtsp_video_streaming = 554
-framerate = 100
-server_port = 25571
+LOCAL_TZ = datetime.timezone(datetime.timedelta(hours=-time.timezone / 3600))
 
 
 def feedback_json_create(json_pid_file_path: Path = Path("PID.json")) -> str:
-    """Функция создает json файл обратной связи json_file_path c PID, PPID и именем процесса"""
-    PID = os.getpid()  # id процесса
-    PARENT_PID = os.getppid()  # id для родительского процесса
-    feedback_list = {'datetime': str(datetime.datetime.now()), 'PID': PID, 'PARENT_PID': PARENT_PID,
-                     'process_name': psutil.Process(PID).name()}
+    """Функция создает json файл обратной связи json_file_path c pid, PPID и именем процесса."""
+    pid = os.getpid()  # id процесса
+    parent_pid = os.getppid()  # id для родительского процесса
+    feedback_list = {"datetime": str(datetime.datetime.now(tz=LOCAL_TZ)), "pid": pid, "parent_pid": parent_pid,
+                     "process_name": psutil.Process(pid).name()}
     try:
-        with json_pid_file_path.open('w') as jsonfile:
+        with json_pid_file_path.open("w") as jsonfile:
             jsonfile.write(json.dumps(feedback_list))
-            result = 'Файл обратной связи создан.\n'
-        print("Feedback json updated...")
+            result = "Feedback json created successfully.\n"
+        log.debug("Feedback json updated...")
     except Exception as e:
-        print(e)
-        result = f'При создании файла возникла ошибка: {e}'
+        log.error("Error while creating feedback json")
+        log.exception(e)
+        result = f"error while creating feedback json: {e}"
     return result
 
 
 def check_new_embedings(directory: Path = Path(r"D:\projects\OmzitDetect\fio_pictures")) -> bool:
     """Проверяет наличие новых эмбеддингов в папке с видеофрагментами."""
-
     embedings_file = Path("embeddings.json")
     if not embedings_file.exists():
-        print("No embeddings file.")
+        log.warning("No embeddings file.")
         return True
 
     # файл для хранения количества файлов фото
-    sum_file = Path('count_image_files.txt')
+    sum_file = Path("count_image_files.txt")
     if not sum_file.exists():
         sum_file.write_text(str(0))
 
@@ -74,15 +65,15 @@ def check_new_embedings(directory: Path = Path(r"D:\projects\OmzitDetect\fio_pic
         sum_file.write_text(str(count_image_files))
         # удаление старого файла embedings
         embedings_file.unlink()
-        print("Pictures files has changed.")
+        log.warning("Pictures files has changed.")
         return True
-    print("No new embeddings. Starting recognition service. \n")
+    log.debug("No new embeddings. Starting recognition service. \n")
     return False
 
 
-def load_embeddings(embeddings_file: str = "embeddings.json") -> dict:
+def load_embeddings(embeddings_file: Path = Path("embeddings.json")) -> dict:
     """Загружает предвычисленные эмбеддинги из файла."""
-    with open(embeddings_file) as f:
+    with embeddings_file.open("r") as f:
         face_database = json.load(f)
 
     for name, encoding in face_database.items():
@@ -90,7 +81,7 @@ def load_embeddings(embeddings_file: str = "embeddings.json") -> dict:
     return face_database
 
 
-def get_stream_url():
+def get_stream_url() -> Path:
     """Получение сслыки на видео-поток из python 3.9 и запись в файл."""
     # Запуск скрипта на Python 3.9
     script_path = r"D:\projects\OmzitDetect\create_stream_request.py"
@@ -107,22 +98,14 @@ def get_stream_url():
     return file
 
 
-def show_video_stream(k_limit: float = 1.0, model_name: str = "buffalo_l") -> None:
+def show_video_stream(model_name: str = "buffalo_l") -> None:
     """Функция для показа видео-потока с распознаванием лиц."""
-    wide_fio_pictures = True
-    chanel_pre_dining = "jzR1xGgm"
-    chanel_sob = "WvQJrWMU"
-    chanel_rod = "lseFtTI8"
-    chanel_tuh = "xfNy7Fzu"
-    chanel_dining = "XZ1Xs7w0"
-
     # Инициализация InsightFace
-    # antelopev2
     app = FaceAnalysis(name=model_name,
-                       providers=['CPUExecutionProvider'])  # Используем CPU (замените на GPU, если доступно)
+                       providers=["CPUExecutionProvider"])  # Используем CPU (замените на GPU, если доступно)
     # app = FaceAnalysis(name="buffalo_l", providers=["CUDAExecutionProvider"])
-    det_size_small = (320, 320)
-    det_size_average = (640, 640)
+    # det_size_small = (320, 320)
+    # det_size_average = (640, 640)
     app.prepare(ctx_id=0, det_size=(1280, 1280))
 
     # чтение ссылки на видео-поток из файла
@@ -130,7 +113,7 @@ def show_video_stream(k_limit: float = 1.0, model_name: str = "buffalo_l") -> No
     stream_request = file.read_text()
 
     # Загружаем предвычисленные эмбеддинги
-    face_database = load_embeddings("embeddings.json")
+    face_database = load_embeddings(Path("embeddings.json"))
     known_names = []
     known_encodings = []
 
@@ -147,35 +130,20 @@ def show_video_stream(k_limit: float = 1.0, model_name: str = "buffalo_l") -> No
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret or frame is None:
-            print("Аварийное завершение видеопотока.")
+            log.warning("Аварийное завершение видеопотока.")
             break
 
-        # Определяем границы области видимости
-        height, width = frame.shape[:2]
-        x_limit = int(width * k_limit)
-
-        # Рисуем красный прямоугольник для области видимости
-        cv2.rectangle(frame, (0, 0), (x_limit, height), (0, 0, 255), 2)
-
-        # Обнаруживаем лица с помощью InsightFace
+        # InsightFace
         faces = app.get(frame)
 
         for face in faces:
             recognitions += 1
             # Проверяем, находится ли лицо в пределах области видимости
             left, top, right, bottom = map(int, face.bbox)
-            if left > x_limit:
-                continue  # Пропускаем лица за пределами области
+            log.debug("quality frame: {qa}", qa=face.det_score)
 
-            if face.det_score < 0.9:
-                print("quality frame:", face.det_score)
-            pic_width = face.bbox[2] - face.bbox[0]
-            pic_height = face.bbox[3] - face.bbox[1]
-            if pic_width < 50 or pic_height < 50:  # Минимальный размер лица
-                print(f"SMALL FACE SIZE: {(float(pic_width), float(pic_height))}")
-
-            if pic_width < 30 or pic_height < 30:  # Пропуск малых размеров
-                print("SKIP small frame.\n")
+            if face.bbox[2] - face.bbox[0] < 30 or face.bbox[3] - face.bbox[1] < 30:  # Пропуск малых размеров
+                log.debug("SKIP small frame.\n")
                 continue
 
             # Получаем эмбеддинг лица
@@ -185,39 +153,53 @@ def show_video_stream(k_limit: float = 1.0, model_name: str = "buffalo_l") -> No
             distances = np.linalg.norm(known_encodings - face_encoding, axis=1)
 
             best_match_index = np.argmin(distances)
-            time_mark = datetime.datetime.now().timestamp()
+            time_mark = datetime.datetime.now(tz=LOCAL_TZ).timestamp()
 
             name = "Unknown"
 
             best_match_koef = float(distances[best_match_index])
+
             if best_match_koef < 1.26:
                 name = known_names[best_match_index]
                 cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
                 cv2.putText(frame, name, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+
+                # Определяем путь для сохранения в зависимости от коэффициента совпадения
+                base_path = Path(__file__).parent / "videocap"
+                match best_match_koef:
+                    case koef if koef <= 0.6:
+                        save_path = base_path / "best"
+                        quantity_of_good_frames += 1
+                        log.success("BEST FRAMES: ({quantity_of_good_frames}, {recognitions}) {best_match_koef}",
+                                    quantity_of_good_frames=quantity_of_good_frames,
+                                    recognitions=recognitions,
+                                    best_match_koef=best_match_koef)
+                    case koef if koef <= 0.99:
+                        save_path = base_path / "1"
+                        quantity_of_good_frames += 1
+                        log.success("1 FRAMES: ({quantity_of_good_frames}, {recognitions}) {best_match_koef}",
+                                    quantity_of_good_frames=quantity_of_good_frames,
+                                    recognitions=recognitions,
+                                    best_match_koef=best_match_koef)
+                    case koef if koef <= 1.11:
+                        save_path = base_path / "1_1"
+                        quantity_of_good_frames += 1
+                        log.success("1_1 FRAMES: ({quantity_of_good_frames}, {recognitions}) {best_match_koef}",
+                                    quantity_of_good_frames=quantity_of_good_frames,
+                                    recognitions=recognitions,
+                                    best_match_koef=best_match_koef)
+                    case koef if koef <= 1.21:
+                        save_path = base_path / "1_2"
+                        quantity_of_good_frames += 1
+                        log.debug("1_2 FRAMES: ({quantity_of_good_frames}, {recognitions}) {best_match_koef}",
+                                  quantity_of_good_frames=quantity_of_good_frames,
+                                  recognitions=recognitions,
+                                  best_match_koef=best_match_koef)
+                    case _:
+                        save_path = base_path
+
                 # Сохраняем кадр
-                filename = Path(__file__).parent / Path("videocap") / Path(f"{name}_{time_mark}.png")
-                if best_match_koef <= 1.21:
-                    quantity_of_good_frames += 1
-                    print(f"GOOD FRAMES: ({quantity_of_good_frames}, {recognitions}) {best_match_koef=:.2f}")
-                    filename = (Path(__file__).parent
-                                / Path("videocap")
-                                / Path("1_2")
-                                / Path(f"{name}_{time_mark}.png"))
-                elif best_match_koef <= 1.11:
-                    filename = (Path(__file__).parent
-                                / Path("videocap")
-                                / Path("1_1")
-                                / Path(f"{name}_{time_mark}.png"))
-                elif best_match_koef <= 0.99:
-                    filename = (Path(__file__).parent
-                                / Path("videocap")
-                                / Path("1")
-                                / Path(f"{name}_{time_mark}.png"))
-                elif best_match_koef <= 0.6:
-                    filename = (Path(__file__).parent
-                                / Path("videocap")
-                                / Path("best")
-                                / Path(f"{name}_{time_mark}.png"))
+                filename = save_path / f"{name}_{time_mark}.png"
 
                 # сохранение результата
                 cv2.imwrite(str(filename), frame)
@@ -226,7 +208,9 @@ def show_video_stream(k_limit: float = 1.0, model_name: str = "buffalo_l") -> No
             cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
             cv2.putText(frame, name, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
-            print(f"RECOGNIZED {name}, ({quantity_of_good_frames}, {recognitions}), {best_match_koef=:.2f}\n")
+            log.debug("RECOGNIZED {name}, ({quantity_of_good_frames}, {recognitions}), {best_match_koef}\n",
+                      name=name, quantity_of_good_frames=quantity_of_good_frames, recognitions=recognitions,
+                      best_match_koef=best_match_koef)
 
         # Показываем кадр
         cv2.namedWindow("Video Stream", cv2.WINDOW_NORMAL)
@@ -238,8 +222,6 @@ def show_video_stream(k_limit: float = 1.0, model_name: str = "buffalo_l") -> No
 
     cap.release()
     cv2.destroyAllWindows()
-    # except Exception as e:
-    #     print(f"Произошла ошибка: {e}")
 
 
 def create_embeddings_from_folders(
@@ -248,19 +230,20 @@ def create_embeddings_from_folders(
         model_name: str = "buffalo_l",  # Выбор модели (buffalo_l, buffalo_s и т.д.)
 ) -> None:
     """Создаёт и сохраняет эмбеддинги лиц из изображений в подпапках указанной папки с использованием InsightFace.
+
     Каждая подпапка соответствует одному человеку.
     """
     # Проверка существования файла эмбеддингов
     if embeddings_file.exists():
-        print(f"Файл {embeddings_file} уже существует.")
+        log.info("Файл {embeddings_file} уже существует.", embeddings_file=embeddings_file)
         return
 
-    print("New embeddings file will be created...\n")
+    log.debug("New embeddings file will be created...\n")
 
     # Инициализация InsightFace
     app = FaceAnalysis(name=model_name, providers=["CPUExecutionProvider"])  # Выбор модели
     det_size_small = (320, 320)
-    det_size_average = (640, 640)
+    # det_size_average = (640, 640)
     app.prepare(ctx_id=0, det_size=det_size_small)
 
     face_database = {}  # Словарь для хранения эмбеддингов
@@ -279,13 +262,13 @@ def create_embeddings_from_folders(
                 # Загрузка изображения
                 image = cv2.imread(str(image_file))
                 if image is None:
-                    print(f"Failed to load image: {image_file}")
+                    log.warning("Failed to load image: {image_file}", image_file=image_file)
                     continue
 
                 # Обнаружение лиц
                 faces = app.get(image)
                 if len(faces) == 0:
-                    print(f"Failed to detect faces in image: {image_file}")
+                    log.warning("Failed to detect faces in image: {image_file}", imaget_file=image_file)
                     continue
 
                 # Добавляем первый найденный эмбеддинг
@@ -296,13 +279,13 @@ def create_embeddings_from_folders(
         if face_encodings_for_person:
             face_database[person_name] = face_encodings_for_person
         else:
-            print(f"For person {person_name} not found any faces.")
+            log.warning("For person {person_name} not found any faces.", person_name=person_name)
 
     # Сохранение эмбеддингов в JSON-файл
     with embeddings_file.open("w") as json_file:
         json_file: TextIOWrapper
         json.dump(face_database, json_file)
-        print(f"Embeddings saved to {embeddings_file}.")
+        log.debug("Embeddings saved to {embeddings_file}.", embeddings_file=embeddings_file)
 
 
 if __name__ == "__main__":
@@ -316,4 +299,4 @@ if __name__ == "__main__":
     feedback_json_create()
 
     # TODO сделать перезапуск видеопотока через json обратной связи
-    show_video_stream(k_limit=1.0, model_name=models[0])
+    show_video_stream(model_name=models[0])

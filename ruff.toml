@@ -64,12 +64,14 @@ ignore = [
    "RUF001", # многозначительные кирилические символы
    "D104",   # docstring в __init__
    "D400",   # точка в первой строке docstring
-   # TODO убрать на других проектах и использовать anyio как в примере:
-   #  https://docs.astral.sh/ruff/rules/blocking-open-call-in-async-function/
-   "ASYNC230",  # открытие файлов через anyio
+   "ASYNC230",  # открытие файлов через anyio # TODO убрать на других проектах и использовать anyio как в примере: # https://docs.astral.sh/ruff/rules/blocking-open-call-in-async-function/
    "BLE001",  # запрет обработки исключения Exception
    "RET503",  # явный вызов return
    "S311",  # Checks for uses of cryptographically weak pseudo-random number generators
+   "S603",  # Intrusted input
+   "PLR2004",  # Checks for the use of unnamed numerical constants ("magic") values in comparisons.
+   "PLR0915",  # Too many statements #  TODO убрать после рефакторинга
+   "PLR0912"   # Too many branches #  TODO убрать после рефакторинга
 ]
 
 [lint.flake8-quotes]
