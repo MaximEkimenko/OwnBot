@@ -91,7 +91,6 @@ def get_stream_url() -> Path:
         capture_output=True,
         text=True, check=False,
     )
-
     result = result.stdout.strip()
     file = Path("stream_url.txt").resolve()
     file.write_text(result)
